@@ -27,6 +27,14 @@ def generate_launch_description():
         'config',
         'control.yaml'],
     )
+    gazebo_controllers_arg = DeclareLaunchArgument(
+        'gazebo_controllers_path',
+        default_value=PathJoinSubstitution([
+            FindPackageShare('jackal_control'),
+            'config',
+            'control.yaml'
+        ])
+    )
 
     # Launch Arguments
 
@@ -35,11 +43,14 @@ def generate_launch_description():
         default_value=[
             PathJoinSubstitution([FindExecutable(name='xacro')]),
             ' ',
-            'is_sim:=true',
-            ' ',
             PathJoinSubstitution(
                 [FindPackageShare('jackal_description'), 'urdf', 'jackal.urdf.xacro']
-            )
+            ),
+            ' ',
+            'is_sim:=true',
+            ' ',
+            'gazebo_controllers:=',
+            LaunchConfiguration('gazebo_controllers_path'),
         ]
     )
 
@@ -76,36 +87,39 @@ def generate_launch_description():
     ])
 
     # ROS2 Controllers
-    # ROS2 Controllers (control_group_action 내부만 수정)
     control_group_action = GroupAction([
+        # ROS2 Control
+        Node(
+            package='controller_manager',
+            executable='ros2_control_node',
+            parameters=[{'robot_description': robot_description_content},
+                        config_jackal_velocity_controller],
+            output={
+                'stdout': 'screen',
+                'stderr': 'screen',
+            },
+            # condition=UnlessCondition(is_sim)
+        ),
+
         # Joint State Broadcaster
         Node(
             package='controller_manager',
             executable='spawner',
-            arguments=[
-                'joint_state_broadcaster',
-                '--controller-manager',
-                '/gazebo_ros2_control/controller_manager'
-            ],
+            arguments=['joint_state_broadcaster'],
             output='screen',
         ),
+
+        # Velocity Controller
         Node(
             package='controller_manager',
             executable='spawner',
-            arguments=[
-                'jackal_velocity_controller',
-                '--controller-manager',
-                '/gazebo_ros2_control/controller_manager'
-            ],
+            arguments=['jackal_velocity_controller'],
             output='screen',
-        ),
-
-
+        )
     ])
 
-
-
     ld = LaunchDescription()
+    ld.add_action(gazebo_controllers_arg)
     ld.add_action(robot_description_command_arg)
     ld.add_action(is_sim_arg)
     ld.add_action(localization_group_action)

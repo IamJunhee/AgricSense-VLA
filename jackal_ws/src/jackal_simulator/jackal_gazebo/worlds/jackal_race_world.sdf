@@ -47,10 +47,11 @@
             </plane>
           </geometry>
           <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/Grey</name>
-            </script>
+            <ambient>0.3 0.3 0.3 1</ambient>
+            <diffuse>0.7 0.7 0.7 1</diffuse>
+            <specular>0.01 0.01 0.01 1</specular>
+            <metalness>0.0</metalness>  <!-- 금속성 여부 (0.0 비금속 ~ 1.0 금속) -->
+            <roughness>0.9</roughness>  <!-- 표면 거칠기 (0.0 매끈함 ~ 1.0 매우 거칠음) -->
           </material>
         </visual>
         <velocity_decay>
@@ -80,6 +81,34 @@
       <elevation>0</elevation>
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
+    <plugin
+      filename="libignition-gazebo-physics-system.so"
+      name="ignition::gazebo::systems::Physics">
+    </plugin>
+    <plugin
+      filename="libignition-gazebo-user-commands-system.so"
+      name="ignition::gazebo::systems::UserCommands">
+    </plugin>
+    <plugin
+      filename="libignition-gazebo-scene-broadcaster-system.so"
+      name="ignition::gazebo::systems::SceneBroadcaster">
+    </plugin>
+    
+    <plugin
+      filename="ignition-gazebo-sensors-system"
+      name="gz::sim::systems::Sensors">
+      <render_engine>ogre</render_engine>
+    </plugin>
+    <plugin 
+      filename="libignition-gazebo-imu-system.so"
+      name="ignition::gazebo::systems::Imu">
+    </plugin>
+    <plugin
+      filename="ignition-gazebo-navsat-system"
+      name="ignition::gazebo::systems::NavSat">
+    </plugin>
+
+
     <model name='drc_practice_angled_barrier_135'>
       <static>1</static>
       <static>1</static>
@@ -182,7 +211,7 @@
           <linear>0</linear>
           <angular>0</angular>
         </velocity_decay>
-        <pose>3.52922 -0.016171 0 0 0 -1.5707</pose>
+        <pose relative_to='__model__'>3.52922 -0.016171 0 0 0 -1.5707</pose>
         <self_collide>0</self_collide>
         <kinematic>0</kinematic>
         <gravity>1</gravity>
@@ -217,7 +246,7 @@
           <linear>0</linear>
           <angular>0</angular>
         </velocity_decay>
-        <pose>5.13431 0.54837 0 0 0 -0.785398</pose>
+        <pose relative_to='__model__'>5.13431 0.54837 0 0 0 -0.785398</pose>
         <self_collide>0</self_collide>
         <kinematic>0</kinematic>
         <gravity>1</gravity>
@@ -432,7 +461,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose>-2 -2 0 0 -0 0</pose>
+      <pose relative_to='world'>-2 -2 0 0 -0 0</pose>
     </model>
     <model name='drc_practice_blue_cylinder'>
       <static>1</static>
@@ -469,7 +498,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose>-6 4 0 0 -0 0</pose>
+      <pose relative_to='world'>-6 4 0 0 -0 0</pose>
     </model>
     <model name='drc_practice_organge_jersey_barrier'>
       <static>1</static>
@@ -506,7 +535,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose>-2 3 0 0 -0 0</pose>
+      <pose relative_to='world'>-2 3 0 0 -0 0</pose>
     </model>
     <model name='drc_practice_white_jersey_barrier'>
       <static>1</static>
@@ -543,7 +572,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose>3 4 0 0 -0 0</pose>
+      <pose relative_to='world'>3 4 0 0 -0 0</pose>
     </model>
     <model name='drc_practice_angled_barrier_135_0'>
       <static>1</static>
@@ -897,7 +926,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose>-1 -6 0 0 -0 0</pose>
+      <pose relative_to='world'>-1 -6 0 0 -0 0</pose>
     </model>
     <model name='drc_practice_angled_barrier_135_1'>
       <static>1</static>
@@ -1251,7 +1280,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose>-11 -2 0 0 -0 0</pose>
+      <pose relative_to='world'>-11 -2 0 0 -0 0</pose>
     </model>
     <model name='drc_practice_organge_jersey_barrier_0'>
       <static>1</static>
@@ -1288,7 +1317,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose>-7 -6 0 0 -0 0</pose>
+      <pose relative_to='world'>-7 -6 0 0 -0 0</pose>
     </model>
     <model name='drc_practice_organge_jersey_barrier_1'>
       <static>1</static>
@@ -1325,7 +1354,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose>-9 -6 0 0 -0 0</pose>
+      <pose relative_to='world'>-9 -6 0 0 -0 0</pose>
     </model>
     <model name='drc_practice_blue_cylinder_0'>
       <static>1</static>
@@ -1362,7 +1391,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose>-9.56927 -6 0 0 -0 0</pose>
+      <pose relative_to='world'>-9.56927 -6 0 0 -0 0</pose>
     </model>
     <model name='drc_practice_angled_barrier_135_2'>
       <static>1</static>
@@ -1716,7 +1745,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose>-5 -3 0 0 -0 0</pose>
+      <pose relative_to='world'>-5 -3 0 0 -0 0</pose>
     </model>
     <model name='drc_practice_angled_barrier_135_3'>
       <static>1</static>
@@ -2070,7 +2099,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose>-5 0.583143 0 0 -0 0</pose>
+      <pose relative_to='world'>-5 0.583143 0 0 -0 0</pose>
     </model>
     <model name='drc_practice_angled_barrier_135_4'>
       <static>1</static>
@@ -2424,7 +2453,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose>-4 9.57663 0 0 -0 0</pose>
+      <pose relative_to='world'>-4 9.57663 0 0 -0 0</pose>
     </model>
     <model name='drc_practice_white_jersey_barrier_0'>
       <static>1</static>
@@ -2461,7 +2490,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose>-4 1.55828 0 0 -0 0</pose>
+      <pose relative_to='world'>-4 1.55828 0 0 -0 0</pose>
     </model>
     <model name='drc_practice_white_jersey_barrier_1'>
       <static>1</static>
@@ -2498,7 +2527,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose>-2.58428 6 0 0 -0 0</pose>
+      <pose relative_to='world'>-2.58428 6 0 0 -0 0</pose>
     </model>
     <model name='drc_practice_angled_barrier_135_5'>
       <static>1</static>
@@ -2852,14 +2881,14 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose>4.55618 -4 0 0 -0 0</pose>
+      <pose relative_to='world'>4.55618 -4 0 0 -0 0</pose>
     </model>
     <state world_name='default'>
       <sim_time>1517 346000000</sim_time>
       <real_time>258 967264114</real_time>
       <wall_time>1411659762 999867608</wall_time>
       <model name='drc_practice_angled_barrier_135'>
-        <pose>-6.19884 8.64913 0 0 0 -2.35209</pose>
+        <pose relative_to='world'>-6.19884 8.64913 0 0 0 -2.35209</pose>
         <link name='eight::link'>
           <pose>-9.42965 -2.44159 0 0 0 -3.13748</pose>
           <velocity>0 0 0 0 -0 0</velocity>
@@ -2922,7 +2951,7 @@
         </link>
       </model>
       <model name='drc_practice_angled_barrier_135_0'>
-        <pose>-2.6481 -4.01574 -0.045465 0 0 -0.74752</pose>
+        <pose relative_to='world'>-2.6481 -4.01574 -0.045465 0 0 -0.74752</pose>
         <link name='eight::link'>
           <pose>8.54538 -6.87025 -0.045465 0 0 -1.53292</pose>
           <velocity>0 0 0 0 -0 0</velocity>
@@ -2985,7 +3014,7 @@
         </link>
       </model>
       <model name='drc_practice_angled_barrier_135_1'>
-        <pose>-2.54553 -7.06596 0 0 0 -0.76445</pose>
+        <pose relative_to='world'>-2.54553 -7.06596 0 0 0 -0.76445</pose>
         <link name='eight::link'>
           <pose>8.59802 -10.1096 0 0 0 -1.54985</pose>
           <velocity>0 0 0 0 -0 0</velocity>
@@ -3048,7 +3077,7 @@
         </link>
       </model>
       <model name='drc_practice_angled_barrier_135_2'>
-        <pose>-6.11592 -2.84709 0 0 -0 0</pose>
+        <pose relative_to='world'>-6.11592 -2.84709 0 0 -0 0</pose>
         <link name='eight::link'>
           <pose>4.03368 2.66905 0 0 0 -0.785398</pose>
           <velocity>0 0 0 0 -0 0</velocity>
@@ -3111,7 +3140,7 @@
         </link>
       </model>
       <model name='drc_practice_angled_barrier_135_3'>
-        <pose>-6.09219 0.34648 0 0 -0 0</pose>
+        <pose relative_to='world'>-6.09219 0.34648 0 0 -0 0</pose>
         <link name='eight::link'>
           <pose>4.05741 5.86262 0 0 0 -0.785398</pose>
           <velocity>0 0 0 0 -0 0</velocity>
@@ -3174,7 +3203,7 @@
         </link>
       </model>
       <model name='drc_practice_angled_barrier_135_4'>
-        <pose>9.04983 6.19769 0 0 -0 2.36524</pose>
+        <pose relative_to='world'>9.04983 6.19769 0 0 -0 2.36524</pose>
         <link name='eight::link'>
           <pose>-2.05672 9.37365 0 0 -0 1.57985</pose>
           <velocity>0 0 0 0 -0 0</velocity>
@@ -3237,7 +3266,7 @@
         </link>
       </model>
       <model name='drc_practice_angled_barrier_135_5'>
-        <pose>6.48857 -6.16669 0 0 -0 0.78314</pose>
+        <pose relative_to='world'>6.48857 -6.16669 0 0 -0 0.78314</pose>
         <link name='eight::link'>
           <pose>9.78993 4.90323 0 0 0 -0.002258</pose>
           <velocity>0 0 0 0 -0 0</velocity>
@@ -3300,7 +3329,7 @@
         </link>
       </model>
       <model name='drc_practice_blue_cylinder'>
-        <pose>-3.4151 -6.21466 0 0 -0 0</pose>
+        <pose relative_to='world'>-3.4151 -6.21466 0 0 -0 0</pose>
         <link name='link'>
           <pose>-3.4151 -6.21466 0 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
@@ -3309,7 +3338,7 @@
         </link>
       </model>
       <model name='drc_practice_blue_cylinder_0'>
-        <pose>-9.30033 -6.13922 0 0 -0 0</pose>
+        <pose relative_to='world'>-9.30033 -6.13922 0 0 -0 0</pose>
         <link name='link'>
           <pose>-9.30033 -6.13922 0 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
@@ -3318,7 +3347,7 @@
         </link>
       </model>
       <model name='drc_practice_organge_jersey_barrier'>
-        <pose>-4.54889 -6.23392 0 0 -0 1.59364</pose>
+        <pose relative_to='world'>-4.54889 -6.23392 0 0 -0 1.59364</pose>
         <link name='link'>
           <pose>-4.54889 -6.23392 0 0 -0 1.59364</pose>
           <velocity>0 0 0 0 -0 0</velocity>
@@ -3327,7 +3356,7 @@
         </link>
       </model>
       <model name='drc_practice_organge_jersey_barrier_0'>
-        <pose>-6.30934 -6.26351 0 0 -0 1.59467</pose>
+        <pose relative_to='world'>-6.30934 -6.26351 0 0 -0 1.59467</pose>
         <link name='link'>
           <pose>-6.30934 -6.26351 0 0 -0 1.59467</pose>
           <velocity>0 0 0 0 -0 0</velocity>
@@ -3336,7 +3365,7 @@
         </link>
       </model>
       <model name='drc_practice_organge_jersey_barrier_1'>
-        <pose>-8.06556 -6.2736 0 0 -0 1.57109</pose>
+        <pose relative_to='world'>-8.06556 -6.2736 0 0 -0 1.57109</pose>
         <link name='link'>
           <pose>-8.06556 -6.2736 0 0 -0 1.57109</pose>
           <velocity>0 0 0 0 -0 0</velocity>
@@ -3345,7 +3374,7 @@
         </link>
       </model>
       <model name='drc_practice_organge_jersey_barrier_2'>
-        <pose>10.3218 -9.21435 0 0 -0 0</pose>
+        <pose relative_to='world'>10.3218 -9.21435 0 0 -0 0</pose>
         <link name='link'>
           <pose>10.3218 -9.21435 0 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
@@ -3354,7 +3383,7 @@
         </link>
       </model>
       <model name='drc_practice_white_jersey_barrier'>
-        <pose>-9.48699 -4.9367 0 0 -0 0</pose>
+        <pose relative_to='world'>-9.48699 -4.9367 0 0 -0 0</pose>
         <link name='link'>
           <pose>-9.48699 -4.9367 0 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
@@ -3363,7 +3392,7 @@
         </link>
       </model>
       <model name='drc_practice_white_jersey_barrier_0'>
-        <pose>10.3176 -7.4365 0 0 -0 0</pose>
+        <pose relative_to='world'>10.3176 -7.4365 0 0 -0 0</pose>
         <link name='link'>
           <pose>10.3176 -7.4365 0 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
@@ -3372,7 +3401,7 @@
         </link>
       </model>
       <model name='drc_practice_white_jersey_barrier_1'>
-        <pose>-4.54271 9.38577 0 0 -0 1.59123</pose>
+        <pose relative_to='world'>-4.54271 9.38577 0 0 -0 1.59123</pose>
         <link name='link'>
           <pose>-4.54271 9.38577 0 0 -0 1.59123</pose>
           <velocity>0 0 0 0 -0 0</velocity>
@@ -3381,7 +3410,7 @@
         </link>
       </model>
       <model name='ground_plane'>
-        <pose>0 0 0 0 -0 0</pose>
+        <pose relative_to='world'>0 0 0 0 -0 0</pose>
         <link name='link'>
           <pose>0 0 0 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
@@ -3431,7 +3460,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose>10 -9.57988 0 0 -0 0</pose>
+      <pose relative_to='world'>10 -9.57988 0 0 -0 0</pose>
     </model>
   </world>
 </sdf>

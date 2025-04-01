@@ -91,7 +91,7 @@ def generate_launch_description():
         default_value=PathJoinSubstitution(
             [pkg_jackal_navigation,
              'maps',
-             'depot.yaml']),
+             'office.yaml']),
         description='Full path to map yaml file to load')
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(

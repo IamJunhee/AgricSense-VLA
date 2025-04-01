@@ -1,100 +1,125 @@
-<sdf version="1.7">
-  <model name="zed_mount">
-    <static>true</static>
+<?xml version="1.0"?>
+<sdf version="1.7" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-    <!-- 지지대 -->
-    <link name="zed_mount_link">
-      <pose>0 0 0 1.5708 0 1.5708</pose>
-      <visual name="zed_mount_visual">
-        <geometry>
-          <mesh>
-            <uri>file://meshes/support_v1_binary.stl</uri>
-            <scale>0.001 0.001 0.001</scale>
-          </mesh>
-        </geometry>
-        <material>
-          <ambient>0.4 0.4 0.4 1</ambient>
-          <diffuse>0.4 0.4 0.4 1</diffuse>
-        </material>
-      </visual>
-      <collision name="zed_mount_collision">
-        <geometry>
-          <mesh>
-            <uri>file://meshes/support_v1_binary.stl</uri>
-            <scale>0.001 0.001 0.001</scale>
-          </mesh>
-        </geometry>
-      </collision>
-      <inertial>
-        <mass>0.3</mass>
-        <inertia>
-          <ixx>0.001</ixx>
-          <ixy>0.0</ixy>
-          <ixz>0.0</ixz>
-          <iyy>0.001</iyy>
-          <iyz>0.0</iyz>
-          <izz>0.001</izz>
-        </inertia>
-        <pose>0 0 0.125 0 0 0</pose>
-      </inertial>
-    </link>
+  <!-- 지지대 링크 -->
+  <link name="zed_mount_link">
+    <pose relative_to='zed_mount_joint'>0 0 0 0 0 0</pose>
+    <visual name="zed_mount_visual">
+      <pose>0 0 0 ${PI/2} 0 ${PI/2}</pose>
+      <geometry>
+        <mesh>
+          <uri>model://jackal_description/meshes/support_v1_binary.stl</uri>
+          <scale>0.001 0.001 0.001</scale>
+        </mesh>
+      </geometry>
+      <material>
+        <ambient>0.4 0.4 0.4 1</ambient>
+        <diffuse>0.4 0.4 0.4 1</diffuse>
+      </material>
+    </visual>
+    <collision name="zed_mount_collision">
+      <pose>0 0 0 ${PI/2} 0 ${PI/2}</pose>
+      <geometry>
+        <mesh>
+          <uri>model://jackal_description/meshes/support_v1_binary.stl</uri>
+          <scale>0.001 0.001 0.001</scale>
+        </mesh>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass>0.3</mass>
+      <pose>0 0 0.125 0 0 0</pose>
+      <inertia>
+        <ixx>0.001</ixx>
+        <ixy>0.0</ixy>
+        <ixz>0.0</ixz>
+        <iyy>0.001</iyy>
+        <iyz>0.0</iyz>
+        <izz>0.001</izz>
+      </inertia>
+    </inertial>
+  </link>
 
-    <!-- ZED 2i 본체 -->
-    <link name="zed_2i_link">
-      <pose>0 0 0.25 0 0 0</pose>
-      <visual name="zed_2i_visual">
-        <geometry>
-          <mesh>
-            <uri>model://meshes/ZED2i_binary.stl</uri>
-            <scale>0.001 0.001 0.001</scale>
-          </mesh>
-        </geometry>
-        <material>
-          <ambient>0.1 0.1 0.1 1</ambient>
-          <diffuse>0.1 0.1 0.1 1</diffuse>
-        </material>
-      </visual>
-      <collision name="zed_2i_collision">
-        <geometry>
-          <box>
-            <size>0.16 0.035 0.025</size>
-          </box>
-        </geometry>
-        <pose>-0.0025 0 0.015 1.5708 0 1.5708</pose>
-      </collision>
-      <inertial>
-        <mass>0.166</mass>
-        <inertia>
-          <ixx>2.49e-05</ixx>
-          <ixy>0</ixy>
-          <ixz>0</ixz>
-          <iyy>0.0002836</iyy>
-          <iyz>0</iyz>
-          <izz>0.0002836</izz>
-        </inertia>
-        <pose>0 0 0.015 0 0 0</pose>
-      </inertial>
-    </link>
+  <!-- ZED 2i 본체 -->
+  <link name="zed_2i_link">
+    <pose relative_to="zed_2i_base_joint">0 0 0 0 0 0</pose>
+    <visual name="zed_2i_visual">
+      <geometry>
+        <mesh>
+          <uri>model://jackal_description/meshes/ZED2i_binary.stl</uri>
+          <scale>0.001 0.001 0.001</scale>
+        </mesh>
+      </geometry>
+      <material>
+        <ambient>0.1 0.1 0.1 1</ambient>
+        <diffuse>0.1 0.1 0.1 1</diffuse>
+      </material>
+      <pose>-0.036262 0.008969 0.017741 0 0 ${PI/2}</pose>
+    </visual>
+    <collision name="zed_2i_collision">
+      <geometry>
+        <box>
+          <size>0.16 0.035 0.025</size>
+        </box>
+      </geometry>
+      <pose>-0.0025 0 0.015 ${PI/2} 0 ${PI/2}</pose>
+    </collision>
+    <inertial>
+      <mass>0.166</mass>
+      <pose>0 0 0.015 0 0 0</pose>
+      <inertia>
+        <ixx>2.49e-05</ixx>
+        <ixy>0</ixy>
+        <ixz>0</ixz>
+        <iyy>0.0002836</iyy>
+        <iyz>0</iyz>
+        <izz>0.0002836</izz>
+      </inertia>
+    </inertial>
+  </link>
 
-    <!-- 고정 조인트들 -->
-    <joint name="zed_mount_to_zed" type="fixed">
-      <parent>zed_mount_link</parent>
-      <child>zed_2i_link</child>
+  <joint name="zed_2i_base_joint" type="fixed">
+    <parent>zed_mount_link</parent>
+    <child>zed_2i_link</child>
+    <pose relative_to="zed_mount_link">0 0 0.25 0 0 0</pose>
+  </joint>
+
+  <!-- ZED 렌즈 센터 -->
+  <link name="zed_2i_lens_center">
+    <pose relative_to="zed_2i_lens_center_joint">0 0 0 0 0 0</pose>
+  </link>
+  <joint name="zed_2i_lens_center_joint" type="fixed">
+    <parent>zed_2i_link</parent>
+    <child>zed_2i_lens_center</child>
+    <pose relative_to="zed_2i_link">0.012994 0 0.015309 ${-PI/2} 0 ${-PI/2}</pose>
+  </joint>
+
+  <!-- 좌우 렌즈 -->
+  <link name="zed_2i_right_lens">
+    <pose relative_to="zed_2i_right_lens_joint">0 0 0 0 0 0</pose>
+  </link>
+  <joint name="zed_2i_right_lens_joint" type="fixed">
+    <parent>zed_2i_lens_center</parent>
+    <child>zed_2i_right_lens</child>
+    <pose relative_to="zed_2i_lens_center">0.06 0 0 0 0 0</pose>
+  </joint>
+
+  <link name="zed_2i_left_lens">
+    <pose relative_to="zed_2i_left_lens_joint">0 0 0 0 0 0</pose>
+  </link>
+  <joint name="zed_2i_left_lens_joint" type="fixed">
+    <parent>zed_2i_lens_center</parent>
+    <child>zed_2i_left_lens</child>
+    <pose relative_to="zed_2i_lens_center">-0.06 0 0 0 0 0</pose>
+  </joint>
+
+  <!-- 렌즈 Gazebo 용 링크 -->
+  <link name="zed_2i_left_lens_gazebo">
+    <pose relative_to="zed_2i_left_lens_joint_gazebo">0 0 0 0 0 0</pose>
+    <sensor name="zed_depth_camera" type="depth">
       <pose>0 0 0 0 0 0</pose>
-    </joint>
-
-    <!-- ZED 2i 센서 -->
-    <link name="zed_2i_camera_link">
-      <pose>0.010494 0 0.265309 -1.5708 0 -1.5708</pose>
-    </link>
-    <joint name="zed_2i_camera_fixed_joint" type="fixed">
-      <parent>zed_2i_link</parent>
-      <child>zed_2i_camera_link</child>
-    </joint>
-    <sensor name="zed_sensor" type="depth">
       <always_on>true</always_on>
-      <update_rate>60</update_rate>
-      <pose>0 0 0 0 0 0</pose>
+      <update_rate>30</update_rate>
       <camera>
         <horizontal_fov>1.92</horizontal_fov>
         <image>
@@ -112,16 +137,34 @@
           <stddev>0.005</stddev>
         </noise>
       </camera>
-      <plugin name="zed_rgbd_camera" filename="gz-sim-camera-system">
-        <topic>zed</topic>
-        <depth_image_topic>depth/image_raw</depth_image_topic>
-        <depth_info_topic>depth/camera_info</depth_info_topic>
-        <image_topic>image_raw</image_topic>
-        <info_topic>camera_info</info_topic>
-        <point_cloud_topic>points</point_cloud_topic>
-        <frame_name>zed_2i_camera_link</frame_name>
-      </plugin>
+      <topic>zed_camera/depth_image</topic>
+    </sensor>
+    <sensor name="zed_rgb_camera" type="camera">
+      <pose>0 0 0 0 0 0</pose> <!-- 렌즈 위치에 맞게 수정 -->
+      <camera>
+        <horizontal_fov>1.92</horizontal_fov>
+        <image>
+          <width>1280</width>
+          <height>960</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.1</near>
+          <far>20.0</far>
+        </clip>
+      </camera>
+      <always_on>true</always_on>
+      <update_rate>30</update_rate>
+      <visualize>true</visualize>
+      <topic>zed_camera/rgb_image</topic>
     </sensor>
 
-  </model>
+  </link>
+
+  <joint name="zed_2i_left_lens_joint_gazebo" type="fixed">
+    <parent>zed_2i_left_lens</parent>
+    <child>zed_2i_left_lens_gazebo</child>
+    <pose relative_to="zed_2i_left_lens">0 0 0 ${PI/2} ${-PI/2} 0</pose>
+  </joint>
+
 </sdf>

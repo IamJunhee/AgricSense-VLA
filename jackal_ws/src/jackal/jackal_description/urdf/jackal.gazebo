@@ -4,7 +4,9 @@
   <!-- jackal.gazebo -->
   <gazebo>
     <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
-      <robot_param>robot_description</robot_param>
+      
+      <robot_param_node>robot_state_publisher</robot_param_node>
+      <parameters>$(arg gazebo_controllers)</parameters> <!-- 반드시 실제 yaml 경로여야 함 -->
       <param name="update_rate">50</param>
       <param name="use_sim_time">true</param>
     </plugin>
