@@ -1,6 +1,7 @@
 from PIL import Image
 import numpy as np
 import torch
+from copy import deepcopy
 
 def load_and_process_image(path: str) -> str:
     image = Image.open(path)
@@ -89,31 +90,43 @@ def generate_prompt(prompt: str, rgb_path: str, d_path: str, context: dict = Non
     if context is None:
         result = dict(messages = [ ])
     else:
-        result = context.copy()
-    result["messages"].append(
+        result = deepcopy(context)
+
+    content = []
+    if rgb_path is not None:
+        content.append(
+            {
+                "type": "image",
+                "path": rgb_path
+            }
+        )
+    if d_path is not None:
+        content.append(
+            {
+                "type": "image",
+                "path": d_path
+            }
+        )
+    content.append(
         {
-            "role" : "user",
-            "content" : [
-                {
-                    "type": "image",
-                    "path": rgb_path
-                },
-                {
-                    "type": "image",
-                    "path": d_path
-                },
-                {
-                    "type": "text",
-                    "text": prompt
-                }
-            ]
+            "type": "text",
+            "text": prompt
         }
     )
 
-    return context
+    result["messages"].append(
+        {
+            "role" : "user",
+            "content" : content
+        }
+    )
+
+    return result
+
+generate_prompt_with_context = lambda prompt, context: generate_prompt(prompt, None, None, context)
 
 def generate(prompt, model, processor, max_new_tokens=200) -> dict:
-    batch = collate_data(prompt, processor, for_generation=True).to(model.device, dtype=model.torch_dtype)
+    batch = collate_data(prompt, processor, for_generation=True).to(model.device, dtype=model.config.torch_dtype)
     
     input_len = batch["input_ids"].shape[-1]
         
@@ -122,7 +135,7 @@ def generate(prompt, model, processor, max_new_tokens=200) -> dict:
         generation = [result[input_len:] for result in generation]
     decoded = [processor.decode(result, skip_special_tokens=True).strip("\n") for result in generation]
 
-    context = prompt.copy()
+    context = deepcopy(prompt)
     
     for index in range(len(context)):
         context[index]["messages"].append(
