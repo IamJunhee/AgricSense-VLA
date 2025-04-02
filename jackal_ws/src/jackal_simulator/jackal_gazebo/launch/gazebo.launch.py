@@ -40,7 +40,7 @@ def generate_launch_description():
     spawn_robot = Node(
         package='gazebo_ros',
         executable='spawn_entity.py',
-        arguments=['-entity', 'jackal', '-file', str(jackal_urdf_path)],
+        arguments=['-entity', 'jackal', '-file', str(jackal_urdf_path),'-x', '-0.5','-y', '-0.5','-z', '0.0'], 
         output='screen'
     )
 
