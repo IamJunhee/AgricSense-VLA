@@ -1,6 +1,5 @@
 from PIL import Image
 import numpy as np
-from collections.abc import Iterable
 
 def load_and_process_image(path: str) -> str:
     image = Image.open(path)
@@ -45,11 +44,11 @@ def process_vision_info(messages: list[dict]) -> list[Image.Image]:
 
     return [load_and_process_image(input).convert("RGB") for input in image_inputs]
 
-def collate_data(datas, for_generation=False):
+def collate_data(datas, processor, for_generation=False):
     texts = []
     images = []
 
-    if not isinstance(datas, Iterable) or isinstance(datas, str):
+    if not isinstance(datas, list):
         datas = [datas]
 
     for data in datas:
@@ -65,8 +64,8 @@ def collate_data(datas, for_generation=False):
 
     return batch
 
-def collate_data_for_train(datas):
-    batch = collate_data(datas)
+def collate_data_for_train(datas, processor):
+    batch = collate_data(datas, processor)
 
     # The labels are the input_ids, and we mask the padding tokens and image tokens in the loss computation
     labels = batch["input_ids"].clone()
@@ -86,7 +85,7 @@ def collate_data_for_train(datas):
     return batch
 
 def generate_prompt(prompt: str, rgb_path: str, d_path: str, context: dict = None) -> dict:
-    result = dict("messages" = [ ])
+    result = dict(messages = [ ])
     result["messages"].append(
         {
             "role" : "user",
