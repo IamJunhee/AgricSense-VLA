@@ -1,5 +1,6 @@
 from PIL import Image
 import numpy as np
+import torch
 
 def load_and_process_image(path: str) -> str:
     image = Image.open(path)
@@ -85,7 +86,10 @@ def collate_data_for_train(datas, processor):
     return batch
 
 def generate_prompt(prompt: str, rgb_path: str, d_path: str, context: dict = None) -> dict:
-    result = dict(messages = [ ])
+    if context is None:
+        result = dict(messages = [ ])
+    else:
+        result = context.copy()
     result["messages"].append(
         {
             "role" : "user",
@@ -106,6 +110,32 @@ def generate_prompt(prompt: str, rgb_path: str, d_path: str, context: dict = Non
         }
     )
 
-    # TODO: context 정보 있으면 대화 앞부분에 추가
+    return context
 
-    return result
+def generate(prompt, model, processor, max_new_tokens=200) -> dict:
+    batch = collate_data(prompt, processor, for_generation=True).to(model.device, dtype=model.torch_dtype)
+    
+    input_len = batch["input_ids"].shape[-1]
+        
+    with torch.inference_mode():
+        generation = model.generate(**batch, max_new_tokens=max_new_tokens)
+        generation = [result[input_len:] for result in generation]
+    decoded = [processor.decode(result, skip_special_tokens=True).strip("\n") for result in generation]
+
+    context = prompt.copy()
+    
+    for index in range(len(context)):
+        context[index]["messages"].append(
+            {
+                "role" : "assistant",
+                "content" : [
+                    {
+                        "type": "text",
+                        "text": decoded[index]
+                    }
+                ]
+            }
+        )
+
+    return dict(generated=decoded, context=context)
+    
