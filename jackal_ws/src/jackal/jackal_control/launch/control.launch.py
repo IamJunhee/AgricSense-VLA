@@ -8,12 +8,15 @@ from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
+    use_sim_time = LaunchConfiguration('use_sim_time')
 
+    declare_use_sim_time_arg = DeclareLaunchArgument(
+        'use_sim_time', default_value='true', description='Use simulation time')
     # Configs
     config_jackal_ekf = PathJoinSubstitution(
         [FindPackageShare('jackal_control'),
          'config',
-         'localization.yaml'],
+         'localization_zed.yaml'],
     )
 
     config_imu_filter = PathJoinSubstitution(
@@ -68,22 +71,45 @@ def generate_launch_description():
     # Localization
     localization_group_action = GroupAction([
         # Extended Kalman Filter
+
         Node(
             package='robot_localization',
             executable='ekf_node',
-            name='ekf_node',
+            name='ekf_filter_node_odom',
             output='screen',
-            parameters=[config_jackal_ekf],
+            parameters=[config_jackal_ekf, {'use_sim_time': use_sim_time}]
+        ),
+        
+        Node(
+            package='robot_localization',
+            executable='ekf_node',
+            name='ekf_filter_node_map',
+            output='screen',
+            parameters=[config_jackal_ekf, {'use_sim_time': use_sim_time}],
+            remappings=[
+                ('/odometry/filtered', '/odometry/global')  # → navsat_transform_node가 구독하는 토픽에 맞춤
+            ],
         ),
 
+        Node(
+            package='robot_localization',
+            executable='navsat_transform_node',
+            name='navsat_transform_node',
+            output='screen',
+            parameters=[config_jackal_ekf, {'use_sim_time': use_sim_time}]
+        ),
+        
         # Madgwick Filter
         Node(
             package='imu_filter_madgwick',
             executable='imu_filter_madgwick_node',
             name='imu_filter_node',
             output='screen',
-            parameters=[config_imu_filter]
-        )
+            remappings=[
+                ('/imu/data', 'imu')  # → navsat_transform_node가 구독하는 토픽에 맞춤
+            ],
+            parameters=[config_imu_filter, {'use_sim_time': use_sim_time}]
+        ),
     ])
 
     # ROS2 Controllers
@@ -98,6 +124,9 @@ def generate_launch_description():
                 'stdout': 'screen',
                 'stderr': 'screen',
             },
+            remappings=[
+                ('/jackal_velocity_controller/odom', '/odom')
+            ],
             condition=UnlessCondition(is_sim)
         ),
 
@@ -119,6 +148,7 @@ def generate_launch_description():
     ])
 
     ld = LaunchDescription()
+    ld.add_action(declare_use_sim_time_arg)
     ld.add_action(gazebo_controllers_arg)
     ld.add_action(robot_description_command_arg)
     ld.add_action(is_sim_arg)

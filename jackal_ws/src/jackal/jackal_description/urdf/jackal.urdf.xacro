@@ -68,7 +68,7 @@
       <child link="${prefix}_wheel_link" />
       <xacro:insert_block name="joint_pose" />
       <axis xyz="0 1 0">
-        <dynamics damping="1.0"/>
+        <dynamics damping="1.0" friction="0.0"/>
       </axis>
     </joint>
 

@@ -95,7 +95,7 @@
       <plugin filename="libgazebo_ros_gps_sensor.so" name="$(arg prefix)gps_plugin">
         <ros>
           <namespace>$(arg prefix)</namespace>
-          <remapping>~/out:=gps/data</remapping>
+          <remapping>~/out:=gps/fix</remapping>
         </ros>
       </plugin>
     </sensor>
