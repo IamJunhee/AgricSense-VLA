@@ -1,0 +1,39 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from jackal_msgs/msg/DriveFeedback.msg
+// generated code does not contain a copyright notice
+
+
+module jackal_msgs {
+  module msg {
+    @verbatim (language="comment", text=
+      "This message represents feedback data from a single drive unit (driver + motor).")
+    struct DriveFeedback {
+      @verbatim (language="comment", text=
+        "Current flowing from battery into the MOSFET bridge.")
+      float current;
+
+      @verbatim (language="comment", text=
+        "Instantaneous duty cycle of MOSFET bridge.")
+      float duty_cycle;
+
+      @verbatim (language="comment", text=
+        "Temperatures measured in the MOSFET bridge and on the motor casing, in deg C.")
+      float bridge_temperature;
+
+      float motor_temperature;
+
+      @verbatim (language="comment", text=
+        "Encoder data" "\n"
+        "rad/s")
+      float measured_velocity;
+
+      @verbatim (language="comment", text=
+        "rad")
+      float measured_travel;
+
+      @verbatim (language="comment", text=
+        "True if the underlying driver chip reports a fault condition.")
+      boolean driver_fault;
+    };
+  };
+};

@@ -1,0 +1,79 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-a9d98ccfcd7a76f8ce1c.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				}
+			],
+			"name" : "",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "interactive_marker_twist_server",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "interactive_marker_twist_server::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-interactive_marker_twist_server-6d1c7cfd60667b6645c1.json",
+					"name" : "interactive_marker_twist_server",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "interactive_marker_twist_server_uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-interactive_marker_twist_server_uninstall-a4fdcb144436b88b9512.json",
+					"name" : "interactive_marker_twist_server_uninstall",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-uninstall-fdd18b4cd7b8d734f74b.json",
+					"name" : "uninstall",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/root/AgricSense-VLA/jackal_ws/build/interactive_marker_twist_server",
+		"source" : "/root/AgricSense-VLA/jackal_ws/src/interactive_marker_twist_server"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 3
+	}
+}

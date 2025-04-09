@@ -1,0 +1,1 @@
+ament_cmake_symlink_install_targets("TARGET_FILES" "/root/AgricSense-VLA/jackal_ws/build/interactive_marker_twist_server/marker_server" "TARGETS" "interactive_marker_twist_server" "DESTINATION" "lib/interactive_marker_twist_server")

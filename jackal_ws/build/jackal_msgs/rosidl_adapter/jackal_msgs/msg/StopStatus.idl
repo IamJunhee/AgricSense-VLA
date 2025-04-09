@@ -1,0 +1,23 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from jackal_msgs/msg/StopStatus.msg
+// generated code does not contain a copyright notice
+
+#include "std_msgs/msg/Header.idl"
+
+module jackal_msgs {
+  module msg {
+    @verbatim (language="comment", text=
+      "Additional Stop information")
+    struct StopStatus {
+      std_msgs::msg::Header header;
+
+      @verbatim (language="comment", text=
+        "True indicates the stop loop is operational (ie. it is powered).")
+      boolean stop_power_status;
+
+      @verbatim (language="comment", text=
+        "True indicates a external stop has been plugged in.")
+      boolean external_stop_present;
+    };
+  };
+};

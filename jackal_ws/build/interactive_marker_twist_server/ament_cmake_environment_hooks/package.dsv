@@ -1,0 +1,4 @@
+source;share/interactive_marker_twist_server/local_setup.bash
+source;share/interactive_marker_twist_server/local_setup.dsv
+source;share/interactive_marker_twist_server/local_setup.sh
+source;share/interactive_marker_twist_server/local_setup.zsh

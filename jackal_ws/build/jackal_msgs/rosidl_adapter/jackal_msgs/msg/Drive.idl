@@ -1,0 +1,35 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from jackal_msgs/msg/Drive.msg
+// generated code does not contain a copyright notice
+
+
+module jackal_msgs {
+  module msg {
+    typedef float float__2[2];
+    module Drive_Constants {
+      @verbatim (language="comment", text=
+        "Command units dependent on the value of this field" "\n"        "velocity command (rad/s of wheels)")
+      const int8 MODE_VELOCITY = 0;
+      @verbatim (language="comment", text=
+        "proportion of full voltage command")
+      const int8 MODE_PWM = 1;
+      @verbatim (language="comment", text=
+        "torque command (Nm)")
+      const int8 MODE_EFFORT = 2;
+      @verbatim (language="comment", text=
+        "no control, commanded values ignored.")
+      const int8 MODE_NONE = -1;
+      @verbatim (language="comment", text=
+        "Units as above, +ve direction propels chassis forward.")
+      const int8 LEFT = 0;
+      const int8 RIGHT = 1;
+    };
+    @verbatim (language="comment", text=
+      "This message represents a low-level motor command to Jackal.")
+    struct Drive {
+      int8 mode;
+
+      float__2 drivers;
+    };
+  };
+};

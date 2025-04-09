@@ -1,0 +1,4 @@
+[console_scripts]
+bgr_to_rgb_relay = sensor_tools.bgr_to_rgb_relay:main
+reliable_relay = sensor_tools.reliable_relay:main
+

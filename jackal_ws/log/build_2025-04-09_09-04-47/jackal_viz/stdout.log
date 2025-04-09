@@ -1,0 +1,46 @@
+-- The C compiler identification is GNU 11.4.0
+-- The CXX compiler identification is GNU 11.4.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found ament_cmake: 1.3.11 (/opt/ros/humble/share/ament_cmake/cmake)
+-- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter 
+-- Override CMake install command with custom implementation using symlinks instead of copying resources
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /root/AgricSense-VLA/jackal_ws/build/jackal_viz
+-- Install configuration: ""
+-- Execute custom install script
+-- Symlinking: /root/AgricSense-VLA/jackal_ws/install/jackal_viz/share/jackal_viz/launch/view_diagnostics.launch.py
+-- Symlinking: /root/AgricSense-VLA/jackal_ws/install/jackal_viz/share/jackal_viz/launch/view_model.launch.py
+-- Symlinking: /root/AgricSense-VLA/jackal_ws/install/jackal_viz/share/jackal_viz/launch/view_robot.launch.py
+-- Symlinking: /root/AgricSense-VLA/jackal_ws/install/jackal_viz/share/jackal_viz/launch/zed_navigation.launch.py
+-- Symlinking: /root/AgricSense-VLA/jackal_ws/install/jackal_viz/share/jackal_viz/rviz/jackal_ign.rviz
+-- Symlinking: /root/AgricSense-VLA/jackal_ws/install/jackal_viz/share/jackal_viz/rviz/jackal_nav2.rviz
+-- Symlinking: /root/AgricSense-VLA/jackal_ws/install/jackal_viz/share/jackal_viz/rviz/model.rviz
+-- Symlinking: /root/AgricSense-VLA/jackal_ws/install/jackal_viz/share/jackal_viz/rviz/nav2.rviz
+-- Symlinking: /root/AgricSense-VLA/jackal_ws/install/jackal_viz/share/jackal_viz/rviz/slam.rviz
+-- Symlinking: /root/AgricSense-VLA/jackal_ws/install/jackal_viz/share/jackal_viz/rviz/zed_navigation.rviz
+-- Symlinking: /root/AgricSense-VLA/jackal_ws/install/jackal_viz/share/jackal_viz/rqt/diagnostics.perspective
+-- Symlinking: /root/AgricSense-VLA/jackal_ws/install/jackal_viz/share/ament_index/resource_index/package_run_dependencies/jackal_viz
+-- Symlinking: /root/AgricSense-VLA/jackal_ws/install/jackal_viz/share/ament_index/resource_index/parent_prefix_path/jackal_viz
+-- Symlinking: /root/AgricSense-VLA/jackal_ws/install/jackal_viz/share/jackal_viz/environment/ament_prefix_path.sh
+-- Symlinking: /root/AgricSense-VLA/jackal_ws/install/jackal_viz/share/jackal_viz/environment/ament_prefix_path.dsv
+-- Symlinking: /root/AgricSense-VLA/jackal_ws/install/jackal_viz/share/jackal_viz/environment/path.sh
+-- Symlinking: /root/AgricSense-VLA/jackal_ws/install/jackal_viz/share/jackal_viz/environment/path.dsv
+-- Symlinking: /root/AgricSense-VLA/jackal_ws/install/jackal_viz/share/jackal_viz/local_setup.bash
+-- Symlinking: /root/AgricSense-VLA/jackal_ws/install/jackal_viz/share/jackal_viz/local_setup.sh
+-- Symlinking: /root/AgricSense-VLA/jackal_ws/install/jackal_viz/share/jackal_viz/local_setup.zsh
+-- Symlinking: /root/AgricSense-VLA/jackal_ws/install/jackal_viz/share/jackal_viz/local_setup.dsv
+-- Symlinking: /root/AgricSense-VLA/jackal_ws/install/jackal_viz/share/jackal_viz/package.dsv
+-- Symlinking: /root/AgricSense-VLA/jackal_ws/install/jackal_viz/share/ament_index/resource_index/packages/jackal_viz
+-- Symlinking: /root/AgricSense-VLA/jackal_ws/install/jackal_viz/share/jackal_viz/cmake/jackal_vizConfig.cmake
+-- Symlinking: /root/AgricSense-VLA/jackal_ws/install/jackal_viz/share/jackal_viz/cmake/jackal_vizConfig-version.cmake
+-- Symlinking: /root/AgricSense-VLA/jackal_ws/install/jackal_viz/share/jackal_viz/package.xml

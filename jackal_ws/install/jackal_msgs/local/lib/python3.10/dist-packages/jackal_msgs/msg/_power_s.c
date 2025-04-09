@@ -1,0 +1,1 @@
+/root/AgricSense-VLA/jackal_ws/build/jackal_msgs/rosidl_generator_py/jackal_msgs/msg/_power_s.c

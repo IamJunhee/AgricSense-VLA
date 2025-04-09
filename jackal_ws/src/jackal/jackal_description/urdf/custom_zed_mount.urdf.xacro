@@ -118,7 +118,7 @@
           <!-- vertical_fov(70도)맞춘경우 -->
           <width>1280</width>
           <height>960</height>
-          <format>R8G8B8</format>
+          <format>B8G8R8</format>
         </image>
         <clip>
           <near>0.1</near>

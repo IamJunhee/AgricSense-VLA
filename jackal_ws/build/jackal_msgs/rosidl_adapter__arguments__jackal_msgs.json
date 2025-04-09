@@ -1,0 +1,12 @@
+{
+  "package_name": "jackal_msgs",
+  "non_idl_tuples": [
+    "/root/AgricSense-VLA/jackal_ws/src/jackal/jackal_msgs:msg/Drive.msg",
+    "/root/AgricSense-VLA/jackal_ws/src/jackal/jackal_msgs:msg/DriveFeedback.msg",
+    "/root/AgricSense-VLA/jackal_ws/src/jackal/jackal_msgs:msg/Feedback.msg",
+    "/root/AgricSense-VLA/jackal_ws/src/jackal/jackal_msgs:msg/Power.msg",
+    "/root/AgricSense-VLA/jackal_ws/src/jackal/jackal_msgs:msg/Status.msg",
+    "/root/AgricSense-VLA/jackal_ws/src/jackal/jackal_msgs:msg/StopStatus.msg",
+    "/root/AgricSense-VLA/jackal_ws/src/jackal/jackal_msgs:srv/SetDomainId.srv"
+  ]
+}

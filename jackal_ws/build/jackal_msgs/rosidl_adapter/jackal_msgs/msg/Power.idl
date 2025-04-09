@@ -1,0 +1,51 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from jackal_msgs/msg/Power.msg
+// generated code does not contain a copyright notice
+
+#include "std_msgs/msg/Header.idl"
+
+module jackal_msgs {
+  module msg {
+    module Power_Constants {
+      @verbatim (language="comment", text=
+        "AC Power")
+      const int8 NOT_APPLICABLE = -1;
+      @verbatim (language="comment", text=
+        "Voltage rails, in volts" "\n"        "Averaged over the message period" "\n"        "Jackal")
+      const uint8 JACKAL_MEASURED_BATTERY = 0;
+      const uint8 JACKAL_MEASURED_5V = 1;
+      const uint8 JACKAL_MEASURED_12V = 2;
+      @verbatim (language="comment", text=
+        "Current senses available on platform, in amps." "\n"        "Averaged over the message period" "\n"        "Jackal")
+      const uint8 JACKAL_TOTAL_CURRENT = 0;
+      const uint8 JACKAL_COMPUTER_CURRENT = 1;
+      const uint8 JACKAL_DRIVE_CURRENT = 2;
+      const uint8 JACKAL_USER_CURRENT = 3;
+    };
+    @verbatim (language="comment", text=
+      "Robot Power readings")
+    struct Power {
+      std_msgs::msg::Header header;
+
+      @verbatim (language="comment", text=
+        "Indicates if AC power is connected.")
+      int8 shore_power_connected;
+
+      @verbatim (language="comment", text=
+        "Indicates if battery is connected.")
+      int8 battery_connected;
+
+      @verbatim (language="comment", text=
+        "Indicates if the 12V user power is good.")
+      int8 power_12v_user_nominal;
+
+      @verbatim (language="comment", text=
+        "Indicates if charging is complete.")
+      int8 charging_complete;
+
+      sequence<float> measured_voltages;
+
+      sequence<float> measured_currents;
+    };
+  };
+};

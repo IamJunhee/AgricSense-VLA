@@ -1,0 +1,23 @@
+// generated from rosidl_adapter/resource/srv.idl.em
+// with input from jackal_msgs/srv/SetDomainId.srv
+// generated code does not contain a copyright notice
+
+
+module jackal_msgs {
+  module srv {
+    struct SetDomainId_Request {
+      @verbatim (language="comment", text=
+        "ROS_DOMAIN_ID")
+      uint8 domain_id;
+    };
+    struct SetDomainId_Response {
+      @verbatim (language="comment", text=
+        "Indicate successful update of domain ID")
+      boolean success;
+
+      @verbatim (language="comment", text=
+        "Error/Success message")
+      string message;
+    };
+  };
+};

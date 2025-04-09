@@ -1,0 +1,37 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from jackal_msgs/msg/Status.msg
+// generated code does not contain a copyright notice
+
+#include "builtin_interfaces/msg/Duration.idl"
+#include "std_msgs/msg/Header.idl"
+
+module jackal_msgs {
+  module msg {
+    @verbatim (language="comment", text=
+      "This message represents lower-frequency status updates" "\n"
+      "Default publish frequency is 1Hz.")
+    struct Status {
+      std_msgs::msg::Header header;
+
+      @verbatim (language="comment", text=
+        "Robot Hardware ID")
+      string hardware_id;
+
+      @verbatim (language="comment", text=
+        "Firmware commit hash")
+      string firmware_commit;
+
+      @verbatim (language="comment", text=
+        "Times since MCU power-on.")
+      builtin_interfaces::msg::Duration mcu_uptime;
+
+      builtin_interfaces::msg::Duration connection_uptime;
+
+      @verbatim (language="comment", text=
+        "Temperature of MCU's PCB in Celsius.")
+      float pcb_temperature;
+
+      float mcu_temperature;
+    };
+  };
+};

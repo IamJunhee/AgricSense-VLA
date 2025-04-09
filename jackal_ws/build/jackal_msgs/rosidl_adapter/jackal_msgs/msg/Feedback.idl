@@ -1,0 +1,31 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from jackal_msgs/msg/Feedback.msg
+// generated code does not contain a copyright notice
+
+#include "jackal_msgs/msg/DriveFeedback.idl"
+#include "std_msgs/msg/Header.idl"
+
+module jackal_msgs {
+  module msg {
+    typedef jackal_msgs::msg::DriveFeedback jackal_msgs__msg__DriveFeedback;
+    typedef jackal_msgs__msg__DriveFeedback jackal_msgs__msg__DriveFeedback__2[2];
+    @verbatim (language="comment", text=
+      "This message represents high-frequency feedback from the MCU," "\n"
+      "as necessary to support closed-loop control and thermal monitoring." "\n"
+      "Default publish frequency is 50Hz.")
+    struct Feedback {
+      std_msgs::msg::Header header;
+
+      jackal_msgs__msg__DriveFeedback__2 drivers;
+
+      @verbatim (language="comment", text=
+        "Commanded control mode, use the TYPE_ constants from jackal_msgs/Drive.")
+      int8 commanded_mode;
+
+      @verbatim (language="comment", text=
+        "Actual control mode. This may differ from the commanded in cases where" "\n"
+        "the motor enable is off, the motors are in over-current, etc.")
+      int8 actual_mode;
+    };
+  };
+};
