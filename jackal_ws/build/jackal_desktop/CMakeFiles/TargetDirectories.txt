@@ -1,9 +1,0 @@
-/root/AgricSense-VLA/jackal_ws/build/jackal_desktop/CMakeFiles/uninstall.dir
-/root/AgricSense-VLA/jackal_ws/build/jackal_desktop/CMakeFiles/jackal_desktop_uninstall.dir
-/root/AgricSense-VLA/jackal_ws/build/jackal_desktop/CMakeFiles/test.dir
-/root/AgricSense-VLA/jackal_ws/build/jackal_desktop/CMakeFiles/edit_cache.dir
-/root/AgricSense-VLA/jackal_ws/build/jackal_desktop/CMakeFiles/rebuild_cache.dir
-/root/AgricSense-VLA/jackal_ws/build/jackal_desktop/CMakeFiles/list_install_components.dir
-/root/AgricSense-VLA/jackal_ws/build/jackal_desktop/CMakeFiles/install.dir
-/root/AgricSense-VLA/jackal_ws/build/jackal_desktop/CMakeFiles/install/local.dir
-/root/AgricSense-VLA/jackal_ws/build/jackal_desktop/CMakeFiles/install/strip.dir

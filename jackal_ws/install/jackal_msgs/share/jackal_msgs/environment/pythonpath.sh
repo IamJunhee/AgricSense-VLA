@@ -1,1 +1,0 @@
-/root/AgricSense-VLA/jackal_ws/build/jackal_msgs/ament_cmake_environment_hooks/pythonpath.sh

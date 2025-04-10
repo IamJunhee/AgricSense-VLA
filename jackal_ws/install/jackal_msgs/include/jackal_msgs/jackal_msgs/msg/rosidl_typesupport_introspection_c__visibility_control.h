@@ -1,1 +1,0 @@
-/root/AgricSense-VLA/jackal_ws/build/jackal_msgs/rosidl_typesupport_introspection_c/jackal_msgs/msg/rosidl_typesupport_introspection_c__visibility_control.h

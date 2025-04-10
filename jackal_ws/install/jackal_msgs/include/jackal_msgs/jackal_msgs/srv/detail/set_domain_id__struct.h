@@ -1,1 +1,0 @@
-/root/AgricSense-VLA/jackal_ws/build/jackal_msgs/rosidl_generator_c/jackal_msgs/srv/detail/set_domain_id__struct.h

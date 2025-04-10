@@ -1,1 +1,0 @@
-/root/AgricSense-VLA/jackal_ws/src/jackal_robot/launch/diagnostics.launch.py

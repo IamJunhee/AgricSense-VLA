@@ -1,1 +1,0 @@
-/root/AgricSense-VLA/jackal_ws/src/jackal/jackal_msgs/msg/Power.msg

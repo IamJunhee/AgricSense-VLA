@@ -1,1 +1,0 @@
-/root/AgricSense-VLA/jackal_ws/build/jackal_msgs/rosidl_generator_cpp/jackal_msgs/msg/detail/power__type_support.hpp

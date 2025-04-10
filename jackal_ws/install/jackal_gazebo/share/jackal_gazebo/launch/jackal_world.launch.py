@@ -1,1 +1,0 @@
-/root/AgricSense-VLA/jackal_ws/src/jackal_simulator/jackal_gazebo/launch/jackal_world.launch.py

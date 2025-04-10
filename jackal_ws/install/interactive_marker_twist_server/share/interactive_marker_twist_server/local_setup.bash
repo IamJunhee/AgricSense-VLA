@@ -1,1 +1,0 @@
-/root/AgricSense-VLA/jackal_ws/build/interactive_marker_twist_server/ament_cmake_environment_hooks/local_setup.bash

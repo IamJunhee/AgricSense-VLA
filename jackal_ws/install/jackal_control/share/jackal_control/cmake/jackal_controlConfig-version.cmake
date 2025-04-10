@@ -1,1 +1,0 @@
-/root/AgricSense-VLA/jackal_ws/build/jackal_control/ament_cmake_core/jackal_controlConfig-version.cmake

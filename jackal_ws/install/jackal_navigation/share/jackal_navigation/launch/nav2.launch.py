@@ -1,1 +1,0 @@
-/root/AgricSense-VLA/jackal_ws/src/jackal/jackal_navigation/launch/nav2.launch.py

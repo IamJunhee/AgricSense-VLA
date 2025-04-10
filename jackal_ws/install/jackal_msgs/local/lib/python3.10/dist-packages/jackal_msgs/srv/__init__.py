@@ -1,1 +1,0 @@
-/root/AgricSense-VLA/jackal_ws/build/jackal_msgs/rosidl_generator_py/jackal_msgs/srv/__init__.py

@@ -1,1 +1,0 @@
-/root/AgricSense-VLA/jackal_ws/build/jackal_msgs/rosidl_cmake/srv/SetDomainId_Request.msg

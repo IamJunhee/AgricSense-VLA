@@ -1,1 +1,0 @@
-/root/AgricSense-VLA/jackal_ws/src/jackal/jackal_navigation/launch/slam_zed.launch.py

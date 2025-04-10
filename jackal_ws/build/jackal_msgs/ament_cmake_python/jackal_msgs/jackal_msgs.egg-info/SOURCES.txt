@@ -1,6 +1,0 @@
-setup.py
-jackal_msgs/__init__.py
-jackal_msgs.egg-info/PKG-INFO
-jackal_msgs.egg-info/SOURCES.txt
-jackal_msgs.egg-info/dependency_links.txt
-jackal_msgs.egg-info/top_level.txt
