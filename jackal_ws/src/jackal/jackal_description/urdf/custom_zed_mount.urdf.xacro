@@ -1,0 +1,148 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- 지지대 링크 -->
+  <link name="zed_mount_link">
+    <visual>
+      <geometry>
+        <mesh filename="package://jackal_description/meshes/support_v1_binary.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="${PI/2} 0 ${PI/2}"/>
+      <material name="light_grey" />
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://jackal_description/meshes/support_v1_binary.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="${PI/2} 0 ${PI/2}"/>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0.125" rpy="0 0 0"/>
+      <mass value="0.3"/>
+      <inertia
+        ixx="0.001"
+        ixy="0.0"
+        ixz="0.0"
+        iyy="0.001"
+        iyz="0.0"
+        izz="0.001"/>
+    </inertial>
+  </link>
+
+  <joint name="zed_mount_joint" type="fixed">
+    <parent link="mid_mount"/>  <!-- 또는 front_mount, rear_mount 등 위치 선택 -->
+    <child link="zed_mount_link"/>
+    <origin xyz="${mount_spacing/2} 0 0.0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ZED 2i 본체 -->
+  <link name="zed_2i_link">
+    <visual>
+      <geometry>
+        <mesh filename="package://jackal_description/meshes/ZED2i_binary.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <origin xyz="-0.036262 0.008969 0.017741" rpy="0 0 ${PI/2}"/>
+      <material name="black" />
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.16 0.035 0.025"/>
+      </geometry>
+      <origin xyz="-0.0025 0 0.015" rpy="0 0 ${PI/2}"/>
+    </collision>
+
+    <!-- Inertial 정보 -->
+    <inertial>
+      <origin xyz="0 0 0.015" rpy="0 0 0"/>
+      <mass value="0.166"/>
+      <inertia
+        ixx="2.49e-05"
+        ixy="0.0"
+        ixz="0.0"
+        iyy="0.0002836"
+        iyz="0.0"
+        izz="0.0002836"/>
+    </inertial>
+  </link>
+
+  <joint name="zed_2i_base_joint" type="fixed">
+    <parent link="zed_mount_link"/>
+    <child link="zed_2i_link"/>
+    <origin xyz="0 0 0.25" rpy="0 0 0"/>  <!-- 지지대 높이에 맞춰 0.25m -->
+  </joint>
+
+  <link name="zed_2i_lens_center"></link>
+
+  <joint name="zed_2i_lens_center_joint" type="fixed">
+    <origin xyz="0.012994 0 0.015309" rpy="${-PI/2} 0 ${-PI/2}" />
+    <parent link="zed_2i_link"/>
+    <child link="zed_2i_lens_center" />
+  </joint>
+
+  <link name="zed_2i_right_lens"></link>
+
+  <joint name="zed_2i_right_lens_joint" type="fixed">
+    <origin xyz="0.06 0 0" rpy="0 0 0" />
+    <parent link="zed_2i_lens_center"/>
+    <child link="zed_2i_right_lens" />
+  </joint>
+
+  <link name="zed_2i_left_lens"></link>
+
+  <joint name="zed_2i_left_lens_joint" type="fixed">
+    <origin xyz="-0.06 0 0" rpy="0 0 0" />
+    <parent link="zed_2i_lens_center"/>
+    <child link="zed_2i_left_lens" />
+  </joint>
+
+  <link name="zed_2i_left_lens_gazebo"></link>
+
+  <joint name="zed_2i_left_lens_joint_gazebo" type="fixed">
+    <origin xyz="0 0 0" rpy="${PI/2} ${-PI/2} 0" />
+    <parent link="zed_2i_left_lens"/>
+    <child link="zed_2i_left_lens_gazebo" />
+  </joint>
+
+
+  <!-- Depth Camera Plugin (Gazebo용) -->
+  <gazebo reference="zed_2i_left_lens_gazebo">
+    <sensor name="zed_sensor" type="depth">
+      <always_on>true</always_on>
+      <update_rate>60.0</update_rate>
+      <camera>
+        <horizontal_fov>1.92</horizontal_fov>
+        <image>
+          <!-- 해상도 맞춘경우 -->
+          <!-- <width>1280</width>
+          <height>720</height> -->
+          <!-- vertical_fov(70도)맞춘경우 -->
+          <width>1280</width>
+          <height>960</height>
+          <format>B8G8R8</format>
+        </image>
+        <clip>
+          <near>0.1</near>
+          <far>20.0</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.005</stddev>
+        </noise>
+      </camera>
+
+      <plugin name="zed_rgbd_camera" filename="libgazebo_ros_camera.so">
+        <camera_name>zed</camera_name>
+        <image_topic_name>image_raw</image_topic_name>
+        <camera_info_topic_name>camera_info</camera_info_topic_name>
+        <frame_name>zed_2i_left_lens</frame_name>
+        <depth_image_topic_name>depth/image_raw</depth_image_topic_name>
+        <depth_camera_info_topic_name>depth/camera_info</depth_camera_info_topic_name>
+        <!-- 없어도 발행되드라 -->
+        <point_cloud_topic_name>points</point_cloud_topic_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+
+</robot>

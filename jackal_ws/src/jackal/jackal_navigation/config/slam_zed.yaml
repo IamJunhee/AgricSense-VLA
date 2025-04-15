@@ -1,0 +1,42 @@
+slam_toolbox:
+  ros__parameters:
+    use_sim_time: true
+
+    # Frames
+    odom_frame: odom
+    map_frame: map
+    base_frame: base_link
+
+    # ZED 카메라 기반 LaserScan
+    scan_topic: /zed/scan
+    # 모드
+    mode: mapping
+
+    # SLAM 품질 개선용 파라미터
+    resolution: 0.05
+    transform_publish_period: 0.02
+    map_update_interval: 2.0
+    max_laser_range: 10.0
+    minimum_time_interval: 0.1
+    tf_buffer_duration: 30.0
+    use_scan_matching: true
+    use_scan_barycenter: true
+    scan_buffer_size: 10
+    scan_buffer_maximum_scan_distance: 8.0
+    link_match_minimum_response_fine: 0.1
+    loop_search_maximum_distance: 3.0
+    do_loop_closing: true
+    minimum_laser_range: 0.3
+
+# ✅ depthimage_to_laserscan 파라미터 (같은 파일에 포함시킴)
+depthimage_to_laserscan:
+  ros__parameters:
+    use_sim_time: true
+    scan_time: 0.033
+    range_min: 0.3
+    range_max: 10.0
+    scan_height: 10
+    output_frame: zed_2i_left_lens_gazebo
+    depth_topic: /zed/depth/image_raw
+    camera_info_topic: /zed/depth/camera_info
+    output_topic: /zed/scan

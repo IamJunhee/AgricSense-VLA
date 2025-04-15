@@ -1,0 +1,129 @@
+<?xml version="1.0"?>
+<robot>
+
+  <!-- jackal.gazebo -->
+  <gazebo>
+    <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+      
+      <robot_param_node>robot_state_publisher</robot_param_node>
+      <parameters>$(arg gazebo_controllers)</parameters> <!-- 반드시 실제 yaml 경로여야 함 -->
+      <param name="update_rate">50</param>
+      <param name="use_sim_time">true</param>
+    </plugin>
+  </gazebo>
+
+
+
+  <gazebo reference="imu_link">
+    <sensor name="imu_sensor" type="imu">
+      <always_on>true</always_on>
+      <update_rate>100</update_rate>
+      <visualize>true</visualize>
+
+      <!-- 실제 센서와 비슷한 noise 설정 -->
+      <imu>
+        <angular_velocity>
+          <x>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>0.005</stddev>
+              <bias_mean>0.0000075</bias_mean>
+              <bias_stddev>0.0000008</bias_stddev> <!-- rad/s -->
+            </noise>
+          </x>
+          <y>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>0.005</stddev>
+              <bias_mean>0.0000075</bias_mean>
+              <bias_stddev>0.0000008</bias_stddev> <!-- rad/s -->
+            </noise>
+          </y>
+          <z>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>0.005</stddev>
+              <bias_mean>0.0000075</bias_mean>
+              <bias_stddev>0.0000008</bias_stddev> <!-- rad/s -->
+            </noise>
+          </z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>0.02</stddev>
+              <bias_mean>0.1</bias_mean>
+              <bias_stddev>0.001</bias_stddev>  <!-- m/s² -->
+            </noise>
+          </x>
+          <y>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>0.02</stddev>
+              <bias_mean>0.1</bias_mean>
+              <bias_stddev>0.001</bias_stddev>  <!-- m/s² -->
+            </noise>
+          </y>
+          <z>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>0.02</stddev>
+              <bias_mean>0.1</bias_mean>
+              <bias_stddev>0.001</bias_stddev>  <!-- m/s² -->
+            </noise>
+          </z>
+        </linear_acceleration>
+      </imu>
+
+      <plugin filename="libgazebo_ros_imu_sensor.so" name="$(arg prefix)imu_plugin">
+        <ros>
+          <namespace>$(arg prefix)</namespace>
+          <remapping>~/out:=imu/data_raw</remapping>
+        </ros>
+        <initial_orientation_as_reference>false</initial_orientation_as_reference>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+
+  <gazebo reference="navsat_link">
+    <sensor name="navsat_sensor" type="gps">
+      <always_on>true</always_on>
+      <update_rate>10</update_rate>
+
+      <plugin filename="libgazebo_ros_gps_sensor.so" name="$(arg prefix)gps_plugin">
+        <ros>
+          <namespace>$(arg prefix)</namespace>
+          <remapping>~/out:=gps/fix</remapping>
+        </ros>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+
+  <gazebo reference="base_link">
+    <turnGravityOff>false</turnGravityOff>
+  </gazebo>
+
+  <gazebo reference="chassis_link">
+    <material>Gazebo/DarkGrey</material>
+    <turnGravityOff>false</turnGravityOff>
+  </gazebo>
+    <gazebo reference="imu_link">
+    <turnGravityOff>false</turnGravityOff>
+  </gazebo>
+
+  <gazebo reference="navsat_link">
+    <material>Gazebo/DarkGrey</material>
+    <turnGravityOff>false</turnGravityOff>
+  </gazebo>
+  <gazebo reference="front_fender_link">
+    <material>Gazebo/Yellow</material>
+    <turnGravityOff>false</turnGravityOff>
+  </gazebo>
+  <gazebo reference="rear_fender_link">
+    <material>Gazebo/Yellow</material>
+    <turnGravityOff>false</turnGravityOff>
+  </gazebo>
+</robot>

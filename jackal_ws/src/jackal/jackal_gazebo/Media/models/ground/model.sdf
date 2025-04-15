@@ -1,0 +1,39 @@
+<sdf version="1.6">
+  <model name="ground">
+    <static>true</static>
+    <link name="link">
+      <collision name="collision">
+        <geometry>
+          <mesh>
+            <scale>20 20 20</scale>
+            <uri>model://ground/meshes/ground.dae</uri>
+          </mesh>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1.0</mu>
+              <mu2>1.0</mu2>
+            </ode>
+          </friction>
+          <bounce/>
+          <contact>
+            <ode/>
+          </contact>
+        </surface>
+        <max_contacts>10</max_contacts>
+      </collision>
+      <visual name="branch">
+        <geometry>
+          <mesh>
+            <scale>20 20 20</scale>
+            <uri>model://ground/meshes/ground.dae</uri>
+            <submesh>
+              <name>Plane</name>
+            </submesh>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>
