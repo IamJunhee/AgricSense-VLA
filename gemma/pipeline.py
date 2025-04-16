@@ -2,9 +2,47 @@ from PIL import Image
 import numpy as np
 import torch
 from copy import deepcopy
+from transformers import AutoProcessor, AutoModelForImageTextToText, BitsAndBytesConfig
 
-def load_and_process_image(path: str) -> str:
-    image = Image.open(path)
+__model = None
+__processor = None
+
+def load_model(model_id: str):
+    global __model
+    global __processor
+
+    # Check if model is already loaded
+    if __model is not None:
+        return
+
+    # Check if GPU benefits from bfloat16
+    if torch.cuda.get_device_capability()[0] < 8:
+        raise ValueError("GPU does not support bfloat16, please use a GPU that supports bfloat16.")
+    # TODO: Check HW capabilities
+
+    # Define model init arguments
+    model_kwargs = dict(
+        attn_implementation="flash_attention_2", # Use "flash_attention_2" when running on Ampere or newer GPU
+        torch_dtype=torch.bfloat16, # What torch dtype to use, defaults to auto
+        device_map="auto", # Let torch decide how to load the model
+    )
+
+    # BitsAndBytesConfig int-4 config
+    model_kwargs["quantization_config"] = BitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_use_double_quant=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=model_kwargs["torch_dtype"],
+        bnb_4bit_quant_storage=model_kwargs["torch_dtype"],
+    )
+
+    # Load model and tokenizer
+    __model = AutoModelForImageTextToText.from_pretrained(model_id, **model_kwargs)
+    __processor = AutoProcessor.from_pretrained("google/gemma-3-4b-it", use_fast=True)
+
+def load_and_process_image(image: str | Image.Image) -> Image.Image:
+    if isinstance(image, str):
+        image = Image.open(image)
     channels = len(image.getbands())
 
     if channels == 1:
@@ -35,18 +73,18 @@ def process_vision_info(messages: list[dict]) -> list[Image.Image]:
         # Check each content element for images
         for element in content:
             if isinstance(element, dict) and (
-                "image" in element or element.get("type") == "image"
+                element.get("type") == "image"
             ):
                 # Get the image and convert to RGB
                 if "path" in element:
                     image = element["path"]
-                else:
-                    image = element
+                elif "image" in element and element["image"] is Image.Image:
+                    image = element["image"]
                 image_inputs.append(image)
 
     return [load_and_process_image(input).convert("RGB") for input in image_inputs]
 
-def collate_data(datas, processor, for_generation=False):
+def collate_data(datas, processor, for_generation=True):
     texts = []
     images = []
 
@@ -60,14 +98,15 @@ def collate_data(datas, processor, for_generation=False):
         )
         texts.append(text.strip())
         images.append(image_inputs)
-
+    
     # Tokenize the texts and process the images
-    batch = processor(text=texts, images=images, return_tensors="pt", padding=True)
+    images_arg = images if any(images) else None 
+    batch = processor(text=texts, images=images_arg, return_tensors="pt", padding=True)
 
     return batch
 
 def collate_data_for_train(datas, processor):
-    batch = collate_data(datas, processor)
+    batch = collate_data(datas, processor, False)
 
     # The labels are the input_ids, and we mask the padding tokens and image tokens in the loss computation
     labels = batch["input_ids"].clone()
@@ -125,17 +164,28 @@ def generate_prompt(prompt: str, rgb_path: str, d_path: str, context: dict = Non
 
 generate_prompt_with_context = lambda prompt, context: generate_prompt(prompt, None, None, context)
 
-def generate(prompt, model, processor, max_new_tokens=200) -> dict:
-    batch = collate_data(prompt, processor, for_generation=True).to(model.device, dtype=model.config.torch_dtype)
+def generate(prompt, max_new_tokens=200) -> dict:
+    global __model
+    global __processor
+
+    # check if model is loaded
+    if __model is None or __processor is None:
+        raise Exception("Model is not loaded")
+
+
+    batch = collate_data(prompt, __processor, for_generation=True).to(__model.device, dtype=__model.config.torch_dtype)
     
     input_len = batch["input_ids"].shape[-1]
-        
+
     with torch.inference_mode():
-        generation = model.generate(**batch, max_new_tokens=max_new_tokens)
+        generation = __model.generate(**batch, max_new_tokens=max_new_tokens)
         generation = [result[input_len:] for result in generation]
-    decoded = [processor.decode(result, skip_special_tokens=True).strip("\n") for result in generation]
+    decoded = [__processor.decode(result, skip_special_tokens=True).strip("\n") for result in generation]
 
     context = deepcopy(prompt)
+
+    if not(isinstance(context, list)):
+        context = [context]
     
     for index in range(len(context)):
         context[index]["messages"].append(
@@ -150,5 +200,5 @@ def generate(prompt, model, processor, max_new_tokens=200) -> dict:
             }
         )
 
-    return dict(generated=decoded, context=context)
+    return [ dict(generated=ele[0], context=ele[1]) for ele in zip(decoded, context) ]
     
