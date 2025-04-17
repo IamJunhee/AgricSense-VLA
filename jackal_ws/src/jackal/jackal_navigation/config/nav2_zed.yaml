@@ -23,8 +23,8 @@ depthimage_to_laserscan:
     use_sim_time: true
     scan_time: 0.033
     range_min: 0.3
-    range_max: 20.0
-    scan_height: 20
+    range_max: 10.0
+    scan_height: 10
     output_frame: zed_2i_left_lens_gazebo
     depth_topic: /zed/depth/image_raw
     camera_info_topic: /zed/depth/camera_info
@@ -201,21 +201,173 @@ controller_server:
       xy_goal_tolerance: 0.25
       yaw_goal_tolerance: 0.25
       stateful: True
+
     FollowPath:
-      plugin: "dwb_core::DWBLocalPlanner"
-      min_vel_x: 0.1
+      plugin: "nav2_rotation_shim_controller::RotationShimController"
+      primary_controller: "dwb_core::DWBLocalPlanner"
+
+      angular_dist_threshold: 0.785
+      forward_sampling_distance: 0.7
+      rotate_to_heading_angular_vel: 1.8
+      max_angular_accel: 6.0
+      simulate_ahead_time: 5.0
+
+      # Velocity constraints
+      debug_trajectory_details: true
+      min_vel_x: 0.0
       max_vel_x: 0.6
-      min_vel_theta: 0.1
+      min_vel_y: 0.0
+      max_vel_y: 0.0
       max_vel_theta: 1.0
-      acc_lim_x: 1.5
-      acc_lim_theta: 3.2
-      decel_lim_theta: 3.2
-      max_rot_vel: 1.0
-      min_rot_vel: 0.2
+      min_speed_xy: 0.0
+      max_speed_xy: 0.6
+      min_speed_theta: 0.1
+      acc_lim_x: 2.5
+      acc_lim_y: 0.0
+      acc_lim_theta: 1.0
+      decel_lim_x: -2.5
+      decel_lim_y: 0.0
+      decel_lim_theta: -3.2
       vx_samples: 20
-      vtheta_samples: 40
-      sim_time: 1.0
-      critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
+      vy_samples: 5
+      vtheta_samples: 20
+      sim_time: 1.7
+      linear_granularity: 0.05
+      angular_granularity: 0.025
+      transform_tolerance: 0.2
+      xy_goal_tolerance: 0.05
+      trans_stopped_velocity: 0.25
+      short_circuit_trajectory_evaluation: true
+      stateful: true
+
+      critics:
+        - BaseObstacle
+        - RotateToGoal
+        - Oscillation
+        - GoalAlign
+        - PathAlign
+        - PathDist
+        - GoalDist
+
+      BaseObstacle.scale: 0.2
+      GoalAlign.forward_point_distance: 0.1
+      GoalAlign.scale: 24.0
+      GoalDist.scale: 24.0
+      PathAlign.forward_point_distance: 0.1
+      PathAlign.scale: 32.0
+      PathDist.scale: 32.0
+      RotateToGoal.lookahead_time: -1.0
+      RotateToGoal.scale: 32.0
+      RotateToGoal.slowing_factor: 5.0
+
+    # FollowPath:
+    #   plugin: "nav2_mppi_controller::MPPIController"
+    #   time_steps: 56
+    #   model_dt: 0.05
+    #   batch_size: 2000
+    #   vx_std: 0.4
+    #   wz_std: 0.8
+    #   vx_max: 0.6
+    #   wz_max: 1.8
+    #   vx_min: -0.35
+    #   wz_min: -1.8
+    #   iteration_count: 1
+    #   prune_distance: 1.7
+    #   transform_tolerance: 0.1
+    #   allow_reversing: true
+    #   reset_period: 1.0
+    #   goal_radius: 0.25
+    #   trajectory_point_step: 1
+    #   max_robot_pose_search_dist: 3.0
+    #   visualize: true
+    #   critics: [
+    #     "ConstraintCritic", 
+    #     "GoalCritic", 
+    #     "PathFollowCritic", 
+    #     "PathAlignCritic", 
+    #     "ObstaclesCritic", 
+    #     "PreferForwardCritic"
+    #   ]
+
+    #   ConstraintCritic:
+    #     enabled: true
+
+    #   GoalCritic:
+    #     enabled: true
+    #     goal_radius: 0.3
+
+    #   PathFollowCritic:
+    #     enabled: true
+    #     trajectory_point_step: 1
+
+    #   PathAlignCritic:
+    #     enabled: true
+    #     offset_from_furthest: 3
+
+    #   ObstaclesCritic:
+    #     enabled: true
+    #     consider_footprint: true
+
+    #   PreferForwardCritic:
+    #     enabled: true
+
+
+    # FollowPath:
+    #   plugin: nav2_rotation_shim_controller::RotationShimController
+    #   primary_controller: dwb_core::DWBLocalPlanner
+    #   # Rotation Shim
+    #   angular_dist_threshold: 0.785
+    #   forward_sampling_distance: 0.7
+    #   rotate_to_heading_angular_vel: 1.8
+    #   max_angular_accel: 6.0
+    #   simulate_ahead_time: 5.0
+    #   # DWB
+    #   debug_trajectory_details: true
+    #   min_vel_x: 0.0
+    #   min_vel_y: 0.0
+    #   max_vel_x: 0.6
+    #   max_vel_y: 0.0
+    #   max_vel_theta: 1.0
+    #   min_speed_xy: 0.0
+    #   max_speed_xy: 0.6
+    #   min_speed_theta: 0.1
+    #   acc_lim_x: 2.5
+    #   acc_lim_y: 0.0
+    #   acc_lim_theta: 1.0
+    #   decel_lim_x: -2.5
+    #   decel_lim_y: 0.0
+    #   decel_lim_theta: -3.2
+    #   vx_samples: 20
+    #   vy_samples: 5
+    #   vtheta_samples: 20
+    #   sim_time: 1.7
+    #   linear_granularity: 0.05
+    #   angular_granularity: 0.025
+    #   transform_tolerance: 0.2
+    #   xy_goal_tolerance: 0.05
+    #   trans_stopped_velocity: 0.25
+    #   short_circuit_trajectory_evaluation: true
+    #   stateful: true
+    #   critics:
+    #   - BaseObstacle
+    #   - RotateToGoal
+    #   - Oscillation
+    #   - GoalAlign
+    #   - PathAlign
+    #   - PathDist
+    #   - GoalDist
+    #   # - ObstacleFootprint
+    #   # ObstacleFootprint.scale: 32.0
+    #   BaseObstacle.scale: 0.2
+    #   GoalAlign.forward_point_distance: 0.1
+    #   GoalAlign.scale: 24.0
+    #   GoalDist.scale: 24.0
+    #   PathAlign.forward_point_distance: 0.1
+    #   PathAlign.scale: 32.0
+    #   PathDist.scale: 32.0
+    #   RotateToGoal.lookahead_time: -1.0
+    #   RotateToGoal.scale: 32.0
+    #   RotateToGoal.slowing_factor: 5.0
 
 
 controller_server_rclcpp_node:
@@ -262,6 +414,7 @@ local_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         inflation_radius: 0.4
+        cost_scaling_factor: 2.5
         
   local_costmap_client:
     ros__parameters:
@@ -307,7 +460,8 @@ global_costmap:
 
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 0.4
+        cost_scaling_factor: 2.0
+        inflation_radius: 0.7
 
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"

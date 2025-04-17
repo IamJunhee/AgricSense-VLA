@@ -26,8 +26,6 @@ def generate_launch_description():
         default_value='true',
         description='Use sim time if true')
     
-    lifecycle_nodes = ['map_server', 'amcl']
-    
 
     amcl_node = Node(
         package='nav2_amcl',
