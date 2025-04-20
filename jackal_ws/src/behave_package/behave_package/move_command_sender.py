@@ -26,8 +26,8 @@ class MoveCommandSender(Node):
         current_y = self.current_pose.position.y
 
         # 반경 2m 이내 무작위 위치
-        dx = random.uniform(-1.0, 1.0)
-        dy = random.uniform(-1.0, 1.0)
+        dx = random.uniform(-2.0, 2.0)
+        dy = random.uniform(-2.0, 2.0)
 
         goal_x = current_x + dx
         goal_y = current_y + dy
