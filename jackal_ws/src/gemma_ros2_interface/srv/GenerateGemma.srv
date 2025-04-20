@@ -1,0 +1,14 @@
+# Request
+string prompt
+bool has_rgb_image
+sensor_msgs/Image rgb_image
+bool has_d_image
+sensor_msgs/Image d_image
+string context_json
+int32 max_new_tokens
+---
+# Response
+bool success
+string generated_text
+string updated_context_json
+string error_message
