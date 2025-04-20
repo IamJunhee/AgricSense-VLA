@@ -3,31 +3,30 @@ import numpy as np
 import torch
 from copy import deepcopy
 from transformers import AutoProcessor, AutoModelForImageTextToText, BitsAndBytesConfig
+from peft import PeftModel
+from typing import Union, Optional, List, Dict, Any # 추가
 
 __model = None
 __processor = None
 
-def load_model(model_id: str):
+def load_model(model_path: str):
     global __model
     global __processor
 
-    # Check if model is already loaded
+    model_id = "google/gemma-3-4b-it"
+
     if __model is not None:
         return
 
-    # Check if GPU benefits from bfloat16
-    if torch.cuda.get_device_capability()[0] < 8:
-        raise ValueError("GPU does not support bfloat16, please use a GPU that supports bfloat16.")
-    # TODO: Check HW capabilities
-
-    # Define model init arguments
     model_kwargs = dict(
-        attn_implementation="flash_attention_2", # Use "flash_attention_2" when running on Ampere or newer GPU
-        torch_dtype=torch.bfloat16, # What torch dtype to use, defaults to auto
-        device_map="auto", # Let torch decide how to load the model
+        torch_dtype=torch.float32,
+        device_map="auto",
     )
 
-    # BitsAndBytesConfig int-4 config
+    if torch.cuda.is_available() and torch.cuda.get_device_capability()[0] >= 8:
+        model_kwargs["torch_dtype"] = torch.bfloat16
+        model_kwargs["attn_implementation"] = "flash_attention_2"
+
     model_kwargs["quantization_config"] = BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_use_double_quant=True,
@@ -36,13 +35,19 @@ def load_model(model_id: str):
         bnb_4bit_quant_storage=model_kwargs["torch_dtype"],
     )
 
-    # Load model and tokenizer
     __model = AutoModelForImageTextToText.from_pretrained(model_id, **model_kwargs)
-    __processor = AutoProcessor.from_pretrained("google/gemma-3-4b-it", use_fast=True)
+    __model = PeftModel.from_pretrained(__model, model_path)
+    __processor = AutoProcessor.from_pretrained(model_id, use_fast=True)
 
-def load_and_process_image(image: str | Image.Image) -> Image.Image:
+def load_and_process_image(image: Union[str, Image.Image]) -> Image.Image:
     if isinstance(image, str):
-        image = Image.open(image)
+        try:
+            image = Image.open(image)
+        except FileNotFoundError:
+            raise FileNotFoundError(f"지정된 경로에 파일이 없습니다: {image}")
+    elif not isinstance(image, Image.Image):
+        raise TypeError("이미지는 파일 경로(str) 또는 PIL.Image 객체여야 합니다.")
+
     channels = len(image.getbands())
 
     if channels == 1:
@@ -58,33 +63,35 @@ def load_and_process_image(image: str | Image.Image) -> Image.Image:
         three_channel_array[:, :, 1] = (img // 32) * 8
         three_channel_array[:, :, 2] = (img % 32) * 8
         image = Image.fromarray(three_channel_array, "RGB")
+    elif image.mode != "RGB":
+        image = image.convert("RGB")
 
     return image
 
-def process_vision_info(messages: list[dict]) -> list[Image.Image]:
-    image_inputs = []
-    # Iterate through each conversation
+def process_vision_info(messages: List[Dict[str, Any]]) -> List[Image.Image]:
+    image_inputs_to_process = []
     for msg in messages:
-        # Get content (ensure it's a list)
         content = msg.get("content", [])
         if not isinstance(content, list):
             content = [content]
 
-        # Check each content element for images
         for element in content:
-            if isinstance(element, dict) and (
-                element.get("type") == "image"
-            ):
-                # Get the image and convert to RGB
+            if isinstance(element, dict) and element.get("type") == "image":
+                image_input = None
                 if "path" in element:
-                    image = element["path"]
-                elif "image" in element and element["image"] is Image.Image:
-                    image = element["image"]
-                image_inputs.append(image)
+                    image_input = element["path"]
+                elif "image" in element and isinstance(element.get("image"), Image.Image): # .get 추가
+                    image_input = element["image"]
 
-    return [load_and_process_image(input).convert("RGB") for input in image_inputs]
+                if image_input is not None:
+                    image_inputs_to_process.append(image_input)
+                else:
+                    # print(f"경고: type이 'image'이지만 'path' 또는 'image' 키/값을 찾을 수 없습니다: {element}")
+                    pass # 로깅 등으로 대체 가능
 
-def collate_data(datas, processor, for_generation=True):
+    return [load_and_process_image(input_data) for input_data in image_inputs_to_process]
+
+def collate_data(datas: Union[Dict[str, Any], List[Dict[str, Any]]], processor: AutoProcessor, for_generation: bool = True) -> Dict[str, torch.Tensor]:
     texts = []
     images = []
 
@@ -92,58 +99,56 @@ def collate_data(datas, processor, for_generation=True):
         datas = [datas]
 
     for data in datas:
-        image_inputs = process_vision_info(data["messages"])
+        image_objects = process_vision_info(data["messages"])
         text = processor.apply_chat_template(
             data["messages"], add_generation_prompt=for_generation, tokenize=False
         )
         texts.append(text.strip())
-        images.append(image_inputs)
-    
-    # Tokenize the texts and process the images
-    images_arg = images if any(images) else None 
+        images.append(image_objects)
+
+    images_arg = images if any(img_list for img_list in images) else None
     batch = processor(text=texts, images=images_arg, return_tensors="pt", padding=True)
 
     return batch
 
-def collate_data_for_train(datas, processor):
+def collate_data_for_train(datas: Union[Dict[str, Any], List[Dict[str, Any]]], processor: AutoProcessor) -> Dict[str, torch.Tensor]:
     batch = collate_data(datas, processor, False)
-
-    # The labels are the input_ids, and we mask the padding tokens and image tokens in the loss computation
     labels = batch["input_ids"].clone()
 
-    # Mask image tokens
-    image_token_id = [
-        processor.tokenizer.convert_tokens_to_ids(
-            processor.tokenizer.special_tokens_map["boi_token"]
-        )
-    ]
-    # Mask tokens for not being used in the loss computation
+    # special_tokens_map에서 'boi_token'이 없을 경우 대비
+    image_token_id_value = processor.tokenizer.convert_tokens_to_ids(
+        processor.tokenizer.special_tokens_map.get("boi_token", "<image>") # 기본값으로 <image> 사용 또는 에러 처리
+    )
+    image_token_id = [image_token_id_value]
+
+
     labels[labels == processor.tokenizer.pad_token_id] = -100
-    labels[labels == image_token_id] = -100
+    labels[labels == image_token_id_value] = -100 # 변수 사용
+    # 특정 토큰 ID (262144) 처리 - Gemma 3 모델의 특수 토큰일 수 있음
     labels[labels == 262144] = -100
 
     batch["labels"] = labels
     return batch
 
-def generate_prompt(prompt: str, rgb_path: str, d_path: str, context: dict = None) -> dict:
+def generate_prompt(prompt: str, rgb_image: Optional[Image.Image] = None, d_image: Optional[Image.Image] = None, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]: # context 타입 힌트 수정
     if context is None:
         result = dict(messages = [ ])
     else:
         result = deepcopy(context)
 
-    content = []
-    if rgb_path is not None:
+    content: List[Dict[str, Any]] = [] # 타입 힌트 추가
+    if rgb_image is not None:
         content.append(
             {
                 "type": "image",
-                "path": rgb_path
+                "image": rgb_image
             }
         )
-    if d_path is not None:
+    if d_image is not None:
         content.append(
             {
                 "type": "image",
-                "path": d_path
+                "image": d_image
             }
         )
     content.append(
@@ -164,41 +169,43 @@ def generate_prompt(prompt: str, rgb_path: str, d_path: str, context: dict = Non
 
 generate_prompt_with_context = lambda prompt, context: generate_prompt(prompt, None, None, context)
 
-def generate(prompt, max_new_tokens=200) -> dict:
+def generate(prompt: Union[Dict[str, Any], List[Dict[str, Any]]], max_new_tokens: int = 200) -> List[Dict[str, Any]]: # 반환 타입 힌트 수정
     global __model
     global __processor
 
-    # check if model is loaded
     if __model is None or __processor is None:
         raise Exception("Model is not loaded")
 
+    batch = collate_data(prompt, __processor, for_generation=True).to(__model.device, dtype=__model.config.torch_dtype if hasattr(__model.config, 'torch_dtype') else torch.float32) # dtype 접근 안전성 추가
 
-    batch = collate_data(prompt, __processor, for_generation=True).to(__model.device, dtype=__model.config.torch_dtype)
-    
     input_len = batch["input_ids"].shape[-1]
 
     with torch.inference_mode():
-        generation = __model.generate(**batch, max_new_tokens=max_new_tokens)
-        generation = [result[input_len:] for result in generation]
-    decoded = [__processor.decode(result, skip_special_tokens=True).strip("\n") for result in generation]
+        generation_output = __model.generate(**batch, max_new_tokens=max_new_tokens) # 변수명 변경
+        generated_tokens = [result[input_len:] for result in generation_output] # 변수명 변경
+    decoded = [__processor.decode(result, skip_special_tokens=True).strip("\n") for result in generated_tokens] # 변수명 변경
 
-    context = deepcopy(prompt)
+    context_list = deepcopy(prompt) # 변수명 변경
 
-    if not(isinstance(context, list)):
-        context = [context]
-    
-    for index in range(len(context)):
-        context[index]["messages"].append(
+    if not isinstance(context_list, list):
+        context_list = [context_list]
+
+    output_list = [] # 결과를 담을 리스트 초기화
+    for index in range(len(context_list)):
+        current_context = context_list[index] # 변수명 변경
+        current_decoded = decoded[index] # 변수명 변경
+
+        current_context["messages"].append(
             {
                 "role" : "assistant",
                 "content" : [
                     {
                         "type": "text",
-                        "text": decoded[index]
+                        "text": current_decoded
                     }
                 ]
             }
         )
+        output_list.append(dict(generated=current_decoded, context=current_context)) # 결과 리스트에 추가
 
-    return [ dict(generated=ele[0], context=ele[1]) for ele in zip(decoded, context) ]
-    
+    return output_list # 최종 결과 리스트 반환
