@@ -56,7 +56,7 @@ class GemmaServiceServerNode(Node):
     def send_request_to_api(self, request_payload: dict):
         self.get_logger().debug(f"API 요청 페이로드 (이미지 제외): {{'prompt': '{request_payload.get('prompt', '')[:50]}...', 'context_keys': {list(request_payload.get('context', {}).keys())}, 'max_tokens': {request_payload.get('max_new_tokens')}}}")
         try:
-            response = requests.post(self.api_url, json=request_payload, timeout=60.0)
+            response = requests.post(self.api_url, json=request_payload, timeout=180.0)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.HTTPError as e:
@@ -79,7 +79,7 @@ class GemmaServiceServerNode(Node):
             print(traceback.format_exc())
             return {"error": str(e)}
 
-    def process_gemma_request(self, prompt: str, rgb_image: Image = None, d_image: Image = None, context_dict: dict = None, max_tokens: int = 500) -> tuple[bool, dict]:
+    def process_gemma_request(self, prompt: str, rgb_image: Image = None, d_image: Image = None, context_dict: dict = None, max_tokens: int = 1000) -> tuple[bool, dict]:
         request_payload = {
             "prompt": prompt,
             "max_new_tokens": max_tokens if max_tokens > 0 else 200

@@ -7,6 +7,7 @@ from agricsense_action_interfaces.action import Agricsense
 from gemma_ros2_interface.srv import GenerateGemma
 
 import deepl
+import json
 import os
 from typing import Optional
 
@@ -19,6 +20,13 @@ class AgricsenseActionServer(Node):
 
         self.declare_parameter('use_translation', False)
         self.declare_parameter('prompt_template', "/root/AgricSense-VLA/jackal_ws/src/gemma_ros_client/resource/prompt_template_kor.txt")
+        self.declare_parameter('tools_json', "/root/AgricSense-VLA/jackal_ws/src/gemma_ros_client/resource/tools_kor.json")
+
+        # Tool list
+        tools_json_path = self.get_parameter('tools_json').get_parameter_value().string_value
+
+        with open(tools_json_path) as f:
+            self.tools_json = json.load(f)
 
         # Prompt Template
         prompt_template_path = self.get_parameter('prompt_template').get_parameter_value().string_value
@@ -81,7 +89,10 @@ class AgricsenseActionServer(Node):
                 is_translated = False
 
         data = {
-            "user_prompt" : real_prompt
+            "user_prompt" : real_prompt,
+            "tools_list_json" : self.tools_json,
+            "farm_info" : "없음",
+            "previous_action_json" : "없음"
         }
 
         self.req.prompt = self.prompt_template.render(data)

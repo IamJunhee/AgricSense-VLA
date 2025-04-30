@@ -1,0 +1,28 @@
+[
+    {
+      "name": "spin",
+      "description": "Rotate the robot at specified/estimated angles and directions",
+      "parameters": {
+        "angle": {
+          "type": "float",
+          "Description": "Examined or reasonably estimated rotation angle (in degrees). Estimated based on 'back' = 180, 'side' = 90."
+        },
+        "direction": {
+          "type": "str",
+          "Description": "Estimated or stated rotation direction ('right' or 'left')"
+        }
+      },
+      "required": ["angle"]
+    },
+    {
+      "name": "end",
+      "description": "Used when meeting mission termination conditions, such as when the user has completed command execution / nothing more can be done",
+      "parameters": {
+        "answer": {
+          "type": "str",
+          "Description": "Report of completion of mission or reason for termination"
+        }
+      },
+      "required": ["answer"]
+    }
+  ]

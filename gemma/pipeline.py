@@ -181,19 +181,19 @@ def generate(prompt: Union[Dict[str, Any], List[Dict[str, Any]]], max_new_tokens
     input_len = batch["input_ids"].shape[-1]
 
     with torch.inference_mode():
-        generation_output = __model.generate(**batch, max_new_tokens=max_new_tokens) # 변수명 변경
-        generated_tokens = [result[input_len:] for result in generation_output] # 변수명 변경
-    decoded = [__processor.decode(result, skip_special_tokens=True).strip("\n") for result in generated_tokens] # 변수명 변경
+        generation_output = __model.generate(**batch, max_new_tokens=max_new_tokens, top_p=0.8, temperature=0.7, do_sample=True)
+        generated_tokens = [result[input_len:] for result in generation_output]
+    decoded = [__processor.decode(result, skip_special_tokens=True).strip("\n") for result in generated_tokens]
 
-    context_list = deepcopy(prompt) # 변수명 변경
+    context_list = deepcopy(prompt)
 
     if not isinstance(context_list, list):
         context_list = [context_list]
 
     output_list = [] # 결과를 담을 리스트 초기화
     for index in range(len(context_list)):
-        current_context = context_list[index] # 변수명 변경
-        current_decoded = decoded[index] # 변수명 변경
+        current_context = context_list[index]
+        current_decoded = decoded[index]
 
         current_context["messages"].append(
             {
