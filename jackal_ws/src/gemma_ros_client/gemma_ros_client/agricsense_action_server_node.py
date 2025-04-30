@@ -10,12 +10,24 @@ import deepl
 import os
 from typing import Optional
 
+from jinja2 import Environment, FileSystemLoader
+
 class AgricsenseActionServer(Node):
 
     def __init__(self):
         super().__init__('agricsense_action_server')
 
         self.declare_parameter('use_translation', False)
+        self.declare_parameter('prompt_template', "/root/AgricSense-VLA/jackal_ws/src/gemma_ros_client/resource/prompt_template_kor.txt")
+
+        # Prompt Template
+        prompt_template_path = self.get_parameter('prompt_template').get_parameter_value().string_value
+
+        self.env = Environment(
+            loader=FileSystemLoader(os.path.dirname(prompt_template_path))
+        )
+
+        self.prompt_template = self.env.get_template(os.path.basename(prompt_template_path))
 
         # Action Server
         self._action_server = ActionServer(
@@ -33,7 +45,7 @@ class AgricsenseActionServer(Node):
 
         self.depth_sub = self.create_subscription(
             Image,
-            '/zed/depth/image_raw',
+            '/zed/depth/image_uint24_mm',
             self.add_depth_to_request,
             10)
 
@@ -68,10 +80,13 @@ class AgricsenseActionServer(Node):
                 real_prompt = goal_handle.request.prompt
                 is_translated = False
 
-        
-        self.req.prompt = real_prompt
+        data = {
+            "user_prompt" : real_prompt
+        }
 
-        self.get_logger().info('request gemma service...')
+        self.req.prompt = self.prompt_template.render(data)
+
+        self.get_logger().info('request gemma service... \n{}'.format(self.req.prompt))
         res = await self.gemma.call_async(self.req)
         self.get_logger().info('request gemma service... Done')
 
