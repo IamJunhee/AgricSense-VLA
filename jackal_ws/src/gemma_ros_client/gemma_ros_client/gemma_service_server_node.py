@@ -79,7 +79,7 @@ class GemmaServiceServerNode(Node):
             print(traceback.format_exc())
             return {"error": str(e)}
 
-    def process_gemma_request(self, prompt: str, rgb_image: Image = None, d_image: Image = None, context_dict: dict = None, max_tokens: int = 200) -> tuple[bool, dict]:
+    def process_gemma_request(self, prompt: str, rgb_image: Image = None, d_image: Image = None, context_dict: dict = None, max_tokens: int = 500) -> tuple[bool, dict]:
         request_payload = {
             "prompt": prompt,
             "max_new_tokens": max_tokens if max_tokens > 0 else 200

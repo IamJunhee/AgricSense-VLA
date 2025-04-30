@@ -9,6 +9,7 @@
 
   <depend>rclpy</depend>
   <depend>gemma_ros2_interface</depend>
+  <depend>agricsense_action_interfaces</depend>
   <depend>sensor_msgs</depend>
   <depend>cv_bridge</depend>
 

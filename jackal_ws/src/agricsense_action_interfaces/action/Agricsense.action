@@ -1,0 +1,9 @@
+# Request
+string prompt
+---
+# Feedback
+string result
+bool success
+---
+# Result
+string thought

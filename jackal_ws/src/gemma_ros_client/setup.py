@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'gemma_server = gemma_ros_client.gemma_service_server_node:main',
+            'agricsense_server = gemma_ros_client.agricsense_action_server_node:main',
         ],
     },
 )
