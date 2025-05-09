@@ -53,7 +53,7 @@ class AgricsenseActionServer(Node):
 
         self.depth_sub = self.create_subscription(
             Image,
-            '/zed/depth/image_uint24_mm',
+            '/zed/depth/image_16uc1_mm',
             self.add_depth_to_request,
             10)
 

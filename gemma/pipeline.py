@@ -181,7 +181,7 @@ def generate(prompt: Union[Dict[str, Any], List[Dict[str, Any]]], max_new_tokens
     input_len = batch["input_ids"].shape[-1]
 
     with torch.inference_mode():
-        generation_output = __model.generate(**batch, max_new_tokens=max_new_tokens, top_p=0.8, temperature=0.7, do_sample=True)
+        generation_output = __model.generate(**batch, max_new_tokens=max_new_tokens, top_k=64, top_p=0.95, do_sample=True)
         generated_tokens = [result[input_len:] for result in generation_output]
     decoded = [__processor.decode(result, skip_special_tokens=True).strip("\n") for result in generated_tokens]
 
