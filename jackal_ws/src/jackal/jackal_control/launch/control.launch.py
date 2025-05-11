@@ -18,6 +18,10 @@ def generate_launch_description():
          'config',
          'localization_zed.yaml'],
     )
+    
+    filepath_config_twist_mux = PathJoinSubstitution(
+        [FindPackageShare('jackal_control'), 'config', 'twist_mux.yaml']
+    )
 
     config_imu_filter = PathJoinSubstitution(
         [FindPackageShare('jackal_control'),
@@ -111,7 +115,7 @@ def generate_launch_description():
             parameters=[config_imu_filter, {'use_sim_time': use_sim_time}]
         ),
     ])
-
+    
     # ROS2 Controllers
     control_group_action = GroupAction([
         # ROS2 Control
@@ -146,6 +150,14 @@ def generate_launch_description():
             output='screen',
         )
     ])
+    
+    node_twist_mux = Node(
+        package='twist_mux',
+        executable='twist_mux',
+        output='screen',
+        remappings={('/cmd_vel_out', '/jackal_velocity_controller/cmd_vel_unstamped')},
+        parameters=[filepath_config_twist_mux]
+    )
 
     ld = LaunchDescription()
     ld.add_action(declare_use_sim_time_arg)
@@ -154,4 +166,5 @@ def generate_launch_description():
     ld.add_action(is_sim_arg)
     ld.add_action(localization_group_action)
     ld.add_action(control_group_action)
+    ld.add_action(node_twist_mux)
     return ld

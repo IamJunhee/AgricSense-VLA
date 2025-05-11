@@ -11,7 +11,7 @@ def generate_launch_description():
     world_file = PathJoinSubstitution(
         [FindPackageShare('jackal_gazebo'),
         'worlds',
-        'tomato_field.world'],
+        'agricsense_field.world'],
     )
 
     gazebo_launch = PathJoinSubstitution(
