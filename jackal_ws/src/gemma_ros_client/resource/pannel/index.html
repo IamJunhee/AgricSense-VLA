@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VLA 데이터 수집 및 모니터링</title>
+    <style>
+        /* box-sizing 전체 적용으로 너비 계산 방식 변경 */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        /* 전체 페이지 스타일 */
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 전체 컨테이너 */
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 상단 이미지 영역 */
+        .image-placeholder {
+            width: 100%;
+            min-height: 300px; /* 최소 높이 유지, 이미지가 로드되면 크기 조절됨 */
+            background-color: #e9ecef;
+            border: 2px dashed #ced4da;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #6c757d;
+            font-size: 1.5em;
+            font-weight: bold;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 15px; /* 하단 여백 약간 줄임 */
+            position: relative; /* 자식 요소의 절대 위치 기준 */
+            cursor: crosshair; /* Depth 값 확인을 위해 커서 변경 */
+        }
+        .image-placeholder img { /* RGB 이미지 스타일 */
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 6px;
+        }
+        .depth-info { /* Depth 값 표시 스타일 */
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background-color: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            display: none; /* 기본적으로 숨김 */
+        }
+
+
+        /* 질문과 입력 필드를 감싸는 행 */
+        .input-row {
+            display: flex; 
+            align-items: stretch; 
+            margin-bottom: 20px; 
+            gap: 20px; 
+        }
+
+        /* 질문 영역 스타일 */
+        .question-area {
+            flex: 1; 
+            padding: 12px;
+            border: 1px solid #e0e0e0; 
+            border-radius: 6px;
+            background-color: #f8f9fa; 
+            color: #343a40;
+            font-size: 1em;
+            min-height: 80px; 
+            display: flex; 
+            align-items: flex-start; 
+            word-break: keep-all; 
+            line-height: 1.6;
+        }
+
+        /* 입력 필드 (textarea) 스타일 */
+        .input-row textarea {
+            flex: 1; 
+            padding: 12px;
+            border: 1px solid #ced4da; 
+            border-radius: 6px; 
+            font-size: 1em;
+            font-family: inherit; 
+            min-height: 80px; 
+            resize: vertical; 
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out; 
+            overflow-y: hidden; 
+        }
+
+        .input-row textarea:focus {
+            border-color: #007bff; 
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); 
+            outline: none; 
+        }
+        .input-row textarea:disabled { /* 비활성화 시 스타일 */
+            background-color: #e9ecef;
+            cursor: not-allowed;
+        }
+
+
+        /* 실행 버튼 스타일 */
+        .action-button {
+            display: block; 
+            width: fit-content; 
+            padding: 12px 30px; 
+            background-color: #007bff; 
+            color: white; 
+            border: none;
+            border-radius: 6px; 
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer; 
+            margin: 30px auto 0; 
+            transition: background-color 0.2s ease-in-out; 
+        }
+
+        .action-button:hover {
+            background-color: #0056b3; 
+        }
+        .action-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        /* 상태 표시줄 (선택 사항) */
+        .status-bar {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 0.9em;
+        }
+        .status-bar.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-color: #f5c6cb;
+        }
+
+
+        /* 모바일 반응형 스타일 */
+        @media (max-width: 768px) { 
+            .container {
+                margin: 10px; 
+                padding: 15px; 
+            }
+            .image-placeholder { min-height: 200px; font-size: 1.2em; }
+            .input-row { flex-direction: column; gap: 10px; }
+            .question-area { min-height: 60px; }
+            .input-row textarea { width: 100%; min-height: 100px; }
+            .action-button { width: 100%; padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="image-placeholder" id="imageDisplayArea">
+            <span>RGB 이미지가 여기에 표시됩니다.</span>
+            <div class="depth-info" id="depthInfo">Depth: - mm</div>
+        </div>
+        <canvas id="hiddenDepthCanvas" style="display:none;"></canvas> <div class="input-row">
+            <div class="question-area" id="question1">인지 프롬프트가 여기에 표시됩니다.</div>
+            <textarea id="input1" name="input1" placeholder="인지 프롬프트에 대한 응답을 입력하세요..."></textarea>
+        </div>
+
+        <div class="input-row">
+            <div class="question-area" id="question2">사고 프롬프트가 여기에 표시됩니다.</div>
+            <textarea id="input2" name="input2" placeholder="사고 프롬프트에 대한 응답을 입력하세요..."></textarea>
+        </div>
+
+        <div class="input-row">
+            <div class="question-area" id="question3">행동 프롬프트가 여기에 표시됩니다.</div>
+            <textarea id="input3" name="input3" placeholder="행동 프롬프트에 대한 응답을 입력하세요..."></textarea>
+        </div>
+
+        <button class="action-button" id="executeButton">데이터 전송 (수집 모드)</button>
+        <div class="status-bar" id="statusBar" style="display:none;">상태 메시지</div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM 요소 가져오기 ---
+            const imageDisplayArea = document.getElementById('imageDisplayArea');
+            const depthInfoDiv = document.getElementById('depthInfo');
+            const hiddenDepthCanvas = document.getElementById('hiddenDepthCanvas');
+            const depthCtx = hiddenDepthCanvas.getContext('2d', { willReadFrequently: true });
+
+
+            const question1Div = document.getElementById('question1');
+            const question2Div = document.getElementById('question2');
+            const question3Div = document.getElementById('question3');
+
+            const input1Textarea = document.getElementById('input1');
+            const input2Textarea = document.getElementById('input2');
+            const input3Textarea = document.getElementById('input3');
+            const allTextareas = [input1Textarea, input2Textarea, input3Textarea];
+
+            const executeButton = document.getElementById('executeButton');
+            const statusBar = document.getElementById('statusBar');
+
+            // --- 상태 변수 ---
+            let websocket = null;
+            let currentOperationMode = "data_collection"; // 기본값
+            let currentSceneData = null; // 수신된 sceneData 저장 (특히 depthImage 정보)
+            let rgbImageElement = null; // 동적으로 생성될 img 태그
+
+            const WEBSOCKET_URL = "ws://localhost:9090"; // 실제 ROS2 웹소켓 서버 주소로 변경
+
+            // --- 유틸리티 함수 ---
+            function generateUUID() {
+                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                });
+            }
+
+            function updateStatusBar(message, isError = false) {
+                statusBar.textContent = message;
+                statusBar.className = isError ? 'status-bar error' : 'status-bar';
+                statusBar.style.display = 'block';
+            }
+
+            // --- 웹소켓 관련 함수 ---
+            function connectWebSocket() {
+                console.log("웹소켓 연결 시도:", WEBSOCKET_URL);
+                updateStatusBar("서버에 연결 중...", false);
+                websocket = new WebSocket(WEBSOCKET_URL);
+
+                websocket.onopen = () => {
+                    console.log("웹소켓 연결 성공!");
+                    updateStatusBar("서버에 성공적으로 연결되었습니다.", false);
+                    // 연결 성공 시 초기 모드 요청 또는 기본 UI 설정 가능
+                };
+
+                websocket.onmessage = (event) => {
+                    try {
+                        const message = JSON.parse(event.data);
+                        console.log("메시지 수신:", message);
+                        handleIncomingMessage(message);
+                    } catch (e) {
+                        console.error("수신 메시지 파싱 오류:", e);
+                        updateStatusBar("수신된 메시지 형식이 올바르지 않습니다.", true);
+                    }
+                };
+
+                websocket.onerror = (error) => {
+                    console.error("웹소켓 오류:", error);
+                    updateStatusBar("웹소켓 연결 오류 발생. 콘솔을 확인하세요.", true);
+                };
+
+                websocket.onclose = () => {
+                    console.log("웹소켓 연결 종료.");
+                    updateStatusBar("서버와의 연결이 끊어졌습니다. 재연결을 시도합니다...", true);
+                    // 재연결 로직 (선택 사항)
+                    setTimeout(connectWebSocket, 5000); // 5초 후 재연결 시도
+                };
+            }
+
+            function sendMessage(type, payload) {
+                if (websocket && websocket.readyState === WebSocket.OPEN) {
+                    const message = {
+                        messageId: generateUUID(),
+                        type: type,
+                        timestamp: new Date().toISOString(),
+                        source: "webpage",
+                        payload: payload
+                    };
+                    console.log("메시지 발신:", message);
+                    websocket.send(JSON.stringify(message));
+                } else {
+                    console.error("웹소켓이 연결되지 않았습니다. 메시지 발신 실패:", type);
+                    updateStatusBar("서버에 연결되지 않아 메시지를 보낼 수 없습니다.", true);
+                }
+            }
+
+            // --- 수신 메시지 처리 로직 ---
+            function handleIncomingMessage(message) {
+                if (!message.payload) {
+                    console.warn("Payload가 없는 메시지 수신:", message);
+                    return;
+                }
+                switch (message.type) {
+                    case "setOperationMode":
+                        handleSetOperationMode(message.payload);
+                        break;
+                    case "sceneData":
+                        currentSceneData = message.payload; // 전체 sceneData 저장
+                        handleSceneData(message.payload);
+                        break;
+                    case "agentResponse":
+                        handleAgentResponse(message.payload);
+                        break;
+                    case "statusNotification":
+                        updateStatusBar(message.payload.message, message.payload.level === 'error');
+                        break;
+                    default:
+                        console.warn("알 수 없는 메시지 타입 수신:", message.type);
+                }
+            }
+
+            function handleSetOperationMode(payload) {
+                currentOperationMode = payload.mode;
+                console.log("운영 모드 변경:", currentOperationMode);
+                updateStatusBar(`운영 모드가 ${currentOperationMode === 'data_collection' ? '데이터 수집' : '실행 모니터링'} 모드로 변경되었습니다.`, false);
+                updateUIForMode();
+            }
+
+            function handleSceneData(payload) {
+                // 1. 프롬프트 업데이트
+                if (payload.prompts) {
+                    question1Div.textContent = payload.prompts.cognition || "인지 프롬프트 없음";
+                    question2Div.textContent = payload.prompts.thinking || "사고 프롬프트 없음";
+                    question3Div.textContent = payload.prompts.action || "행동 프롬프트 없음";
+                }
+
+                // 2. RGB 이미지 표시
+                if (payload.vision && payload.vision.rgbImage && payload.vision.rgbImage.data) {
+                    if (!rgbImageElement) {
+                        rgbImageElement = document.createElement('img');
+                        imageDisplayArea.innerHTML = ''; // 기존 placeholder 텍스트 제거
+                        imageDisplayArea.appendChild(rgbImageElement);
+                        imageDisplayArea.appendChild(depthInfoDiv); // depthInfoDiv를 이미지 뒤로 보내지 않게 다시 추가
+                    }
+                    rgbImageElement.src = payload.vision.rgbImage.data;
+                    rgbImageElement.alt = "RGB Scene Image";
+                    depthInfoDiv.style.display = 'none'; // 새 이미지 로드 시 Depth 정보 숨김
+                } else {
+                    imageDisplayArea.innerHTML = '<span>RGB 이미지가 없습니다.</span>';
+                    rgbImageElement = null;
+                }
+
+                // 3. Depth 이미지 데이터 저장 (클라이언트 측 처리를 위해)
+                // currentSceneData는 이미 메시지 수신 시점에 전체 payload로 업데이트됨
+                // payload.vision.depthImage 관련 정보는 currentSceneData.vision.depthImage 에 저장됨
+
+                // 4. 응답 필드 초기화 (새로운 scene이므로)
+                allTextareas.forEach(ta => ta.value = '');
+                adjustAllTextareasHeight(); // 높이 초기화
+                updateUIForMode(); // 모드에 따라 입력 필드 상태 업데이트
+            }
+
+            function handleAgentResponse(payload) {
+                if (currentOperationMode === "execution_monitoring") {
+                    if (payload.responses) {
+                        input1Textarea.value = payload.responses.cognition || "";
+                        input2Textarea.value = payload.responses.thinking || "";
+                        input3Textarea.value = payload.responses.action || "";
+                        adjustAllTextareasHeight();
+                    }
+                } else {
+                    console.warn("데이터 수집 모드에서 agentResponse 수신됨. 무시합니다.");
+                }
+            }
+
+            // --- UI 업데이트 및 상호작용 ---
+            function updateUIForMode() {
+                if (currentOperationMode === "data_collection") {
+                    allTextareas.forEach(ta => ta.disabled = false);
+                    executeButton.disabled = false;
+                    executeButton.textContent = "데이터 전송 (수집 모드)";
+                } else if (currentOperationMode === "execution_monitoring") {
+                    allTextareas.forEach(ta => ta.disabled = true);
+                    executeButton.disabled = true; // 실행 모드에서는 웹에서 전송할 데이터가 없음
+                    executeButton.textContent = "실행 모니터링 중";
+                }
+            }
+            
+            executeButton.addEventListener('click', () => {
+                if (currentOperationMode === "data_collection") {
+                    if (!currentSceneData || !currentSceneData.vision || !currentSceneData.vision.imageTimestamp) {
+                        updateStatusBar("현재 유효한 장면 데이터가 없습니다. 데이터를 전송할 수 없습니다.", true);
+                        return;
+                    }
+                    const userResponses = {
+                        cognition: input1Textarea.value,
+                        thinking: input2Textarea.value,
+                        action: input3Textarea.value
+                    };
+                    const payload = {
+                        responses: userResponses,
+                        associatedImageTimestamp: currentSceneData.vision.imageTimestamp
+                    };
+                    sendMessage("userAnnotation", payload);
+                    updateStatusBar("사용자 주석을 서버로 전송했습니다.", false);
+                }
+            });
+
+            // Textarea 자동 높이 조절
+            function adjustTextareaHeight(textarea) {
+                textarea.style.height = 'auto';
+                const computedStyle = window.getComputedStyle(textarea);
+                const minHeight = parseInt(computedStyle.minHeight, 10) || 0;
+                let newHeight = textarea.scrollHeight;
+                if (newHeight < minHeight) newHeight = minHeight;
+                textarea.style.height = newHeight + 'px';
+            }
+
+            function adjustAllTextareasHeight() {
+                allTextareas.forEach(adjustTextareaHeight);
+            }
+            allTextareas.forEach(textarea => {
+                textarea.addEventListener('input', () => adjustTextareaHeight(textarea));
+            });
+            window.addEventListener('resize', adjustAllTextareasHeight);
+
+
+            // --- 클라이언트 측 Depth 값 계산 ---
+            imageDisplayArea.addEventListener('click', (event) => {
+                if (!rgbImageElement || !currentSceneData || !currentSceneData.vision || !currentSceneData.vision.depthImage) {
+                    console.log("Depth 계산을 위한 RGB 또는 Depth 이미지가 없습니다.");
+                    return;
+                }
+
+                const depthDataPayload = currentSceneData.vision.depthImage;
+                if (!depthDataPayload.data) {
+                    console.log("Depth 이미지 데이터가 없습니다.");
+                    return;
+                }
+
+                const rect = rgbImageElement.getBoundingClientRect(); // 화면상 이미지의 위치와 크기
+                // 클릭 좌표를 이미지 자체의 내부 좌표로 변환 (0,0 ~ 이미지 width,height)
+                // 이 때, CSS에 의해 이미지 크기가 원본과 다를 수 있음을 고려해야 함
+                const clickX = event.clientX - rect.left;
+                const clickY = event.clientY - rect.top;
+
+                // 이미지 표시 크기 대비 원본 이미지 크기 비율
+                const scaleX = rgbImageElement.naturalWidth / rgbImageElement.width;
+                const scaleY = rgbImageElement.naturalHeight / rgbImageElement.height;
+
+                // 원본 이미지 기준의 클릭 좌표
+                const originalX = Math.floor(clickX * scaleX);
+                const originalY = Math.floor(clickY * scaleY);
+
+                if (originalX < 0 || originalX >= depthDataPayload.width || originalY < 0 || originalY >= depthDataPayload.height) {
+                    console.log("클릭 좌표가 이미지 범위를 벗어났습니다.");
+                    depthInfoDiv.style.display = 'none';
+                    return;
+                }
+
+                const depthImage = new Image();
+                depthImage.onload = () => {
+                    hiddenDepthCanvas.width = depthImage.naturalWidth;
+                    hiddenDepthCanvas.height = depthImage.naturalHeight;
+                    depthCtx.drawImage(depthImage, 0, 0);
+
+                    try {
+                        const pixelData = depthCtx.getImageData(originalX, originalY, 1, 1).data;
+                        // Depth 이미지 인코딩 방식에 따라 픽셀 값 해석
+                        // 예: 16비트 grayscale PNG가 RGBA로 변환되었을 때 R,G,B 채널에 어떻게 저장되는지 확인 필요
+                        // 여기서는 간단히 R 채널 값을 사용한다고 가정 (실제로는 더 복잡할 수 있음)
+                        let rawDepthValue = pixelData[0]; // 0 (R), 1 (G), 2 (B), 3 (A)
+
+                        if (depthDataPayload.encoding === "uint16") {
+                            // 만약 16비트 값이 R과 G에 나뉘어 저장되었다면: rawDepthValue = (pixelData[0] << 8) | pixelData[1];
+                            // 이 예제에서는 PNG가 8비트로 양자화되어 R채널에 저장되었다고 가정.
+                            // 실제 16비트 PNG를 Canvas로 읽을 때의 정확한 처리는 ROS에서 PNG를 어떻게 생성했는지에 따라 달라짐.
+                            // 가장 일반적인 방법은 서버에서 depth 값을 float 배열로 보내거나,
+                            // 클라이언트가 직접 PNG를 파싱하여 16비트 값을 추출하는 라이브러리를 사용하는 것.
+                            // 여기서는 단순화를 위해 R 채널을 0-255 값으로 사용하고 스케일링한다고 가정.
+                        }
+                        
+                        // 스케일 및 단위 적용
+                        const actualDepth = rawDepthValue * (depthDataPayload.scale || 1.0);
+                        depthInfoDiv.textContent = `Depth: ${actualDepth.toFixed(2)} ${depthDataPayload.unit || 'units'} (at ${originalX},${originalY})`;
+                        depthInfoDiv.style.display = 'block';
+
+                    } catch (e) {
+                        console.error("Depth 값 읽기 오류:", e);
+                        depthInfoDiv.textContent = "Depth: 오류";
+                        depthInfoDiv.style.display = 'block';
+                    }
+                };
+                depthImage.onerror = () => {
+                    console.error("Depth 이미지 로드 실패");
+                    depthInfoDiv.textContent = "Depth: 이미지 로드 실패";
+                    depthInfoDiv.style.display = 'block';
+                }
+                depthImage.src = depthDataPayload.data; // Base64 Depth 이미지 데이터
+            });
+
+
+            // --- 초기화 ---
+            connectWebSocket(); // 웹소켓 연결 시작
+            adjustAllTextareasHeight(); // 초기 textarea 높이 조절
+            updateUIForMode(); // 초기 UI 상태 설정
+        });
+    </script>
+
+</body>
+</html>

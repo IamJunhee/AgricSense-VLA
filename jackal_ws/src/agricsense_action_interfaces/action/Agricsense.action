@@ -1,9 +1,9 @@
 # Request
 string prompt
 ---
-# Feedback
+# Result
 string result
 bool success
 ---
-# Result
+# Feedback
 string thought

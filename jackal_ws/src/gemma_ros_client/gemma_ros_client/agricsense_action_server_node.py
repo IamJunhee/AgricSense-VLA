@@ -5,6 +5,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import Image
 from agricsense_action_interfaces.action import Agricsense
 from gemma_ros2_interface.srv import GenerateGemma
+from json_validate import validate_custom_json
 
 import deepl
 import json
@@ -14,29 +15,31 @@ from typing import Optional
 from jinja2 import Environment, FileSystemLoader
 
 class AgricsenseActionServer(Node):
-
+# TODO: 사람이 직접 조종할 수 있도록!
     def __init__(self):
         super().__init__('agricsense_action_server')
 
+        self.declare_parameter('loop_limit', 20)
         self.declare_parameter('use_translation', False)
-        self.declare_parameter('prompt_template', "/root/AgricSense-VLA/jackal_ws/src/gemma_ros_client/resource/prompt_template_kor.txt")
-        self.declare_parameter('tools_json', "/root/AgricSense-VLA/jackal_ws/src/gemma_ros_client/resource/tools_kor.json")
-
-        # Tool list
-        tools_json_path = self.get_parameter('tools_json').get_parameter_value().string_value
-
-        with open(tools_json_path) as f:
-            self.tools_json = json.load(f)
+        self.declare_parameter('prompt_template_path', "/root/AgricSense-VLA/jackal_ws/src/gemma_ros_client/resource/prompt_ko/")
 
         # Prompt Template
-        prompt_template_path = self.get_parameter('prompt_template').get_parameter_value().string_value
+        prompt_template_path = self.get_parameter('prompt_template_path').get_parameter_value().string_value
 
         self.env = Environment(
             loader=FileSystemLoader(os.path.dirname(prompt_template_path))
         )
 
-        self.prompt_template = self.env.get_template(os.path.basename(prompt_template_path))
+        self.prompt_template = {
+            "cognition" : self.env.get_template("cognition_prompt_template.txt"),
+            "reasoning" : self.env.get_template("reasoning_prompt_template.txt"),
+            "action" : self.env.get_template("action_prompt_template.txt")
+        }
 
+        # Tool list
+        with open(os.path.join(prompt_template_path, "tools.json")) as f:
+            self.tools_json = json.load(f)
+        
         # Action Server
         self._action_server = ActionServer(
             self,
@@ -70,6 +73,7 @@ class AgricsenseActionServer(Node):
 
     async def execute_callback(self, goal_handle):
         use_translation = self.get_parameter('use_translation').get_parameter_value().bool_value
+        loop_limit = self.get_parameter('loop_limit').get_parameter_value().integer_value
 
         result = Agricsense.Result()
         feedback = Agricsense.Feedback()
@@ -88,24 +92,60 @@ class AgricsenseActionServer(Node):
                 real_prompt = goal_handle.request.prompt
                 is_translated = False
 
-        data = {
-            "user_prompt" : real_prompt,
-            "tools_list_json" : self.tools_json,
-            "farm_info" : "없음",
-            "previous_action_json" : "없음"
-        }
+        for i in range(loop_limit):
+            # TODO : Current location 추가
+            # TODO : farm_info 추가
+            # TODO : Previous action 추가
 
-        self.req.prompt = self.prompt_template.render(data)
+            data = {
+                "cognition" : {
+                    "user_prompt" : real_prompt,
+                    "farm_info" : "없음",
+                    "current_location" : "없음",
+                    "previous_action_json" : "없음"
+                },
 
-        self.get_logger().info('request gemma service... \n{}'.format(self.req.prompt))
-        res = await self.gemma.call_async(self.req)
-        self.get_logger().info('request gemma service... Done')
+                "action" : {
+                    "tools_list_json" : self.tools_json,
+                }
+            }
 
-        if not(res.success):
-            self.get_logger().info('Gemma Response Failed')
-            goal_handle.abort()
-            result.success = False
-            return result
+            rendered_prompt = {key: value.render(data[key]) for key, value in self.prompt_template.items()}
+
+            try:
+                # Cognition
+                res = await self.call_gemma(rendered_prompt["cognition"])
+                feedback.thought = "Cognition of loop {0} : {1}".format(i, res.generated_text)
+                self.get_logger().info(feedback.thought)
+                goal_handle.publish_feedback(feedback)
+
+                # Reasoning
+                res = await self.call_gemma(prompt = rendered_prompt["reasoning"],
+                                            context = res.updated_context_json)
+                feedback.thought = "Reasoning of loop {0} : {1}".format(i, res.generated_text)
+                self.get_logger().info(feedback.thought)
+                goal_handle.publish_feedback(feedback)
+                
+                # Action
+                res = await self.call_gemma(prompt = rendered_prompt["action"],
+                                            context = res.updated_context_json)
+                feedback.thought = "Selected Action of loop {0} : {1}".format(i, res.generated_text)
+                self.get_logger().info(feedback.thought)
+                goal_handle.publish_feedback(feedback)
+
+
+                action_result = self.do_action(res.generated_text)
+
+                if action_result["is_end"]:
+                    # TODO: 루프 종료 시 내용 상세 구현
+                    break
+
+            except:
+                goal_handle.abort()
+                result.success = False
+                
+                return result
+
 
         self.get_logger().info('Gemma Response Success')
         goal_handle.succeed()
@@ -137,6 +177,35 @@ class AgricsenseActionServer(Node):
         self.req.has_d_image = True
         self.req.d_image = msg
 
+    async def call_gemma(self, prompt, context : str = ""):
+        self.req.prompt = prompt
+        if not(context):
+            self.req.prompt = context
+
+        self.get_logger().info('request gemma service... \n{}'.format(self.req.prompt))
+        res = await self.gemma.call_async(self.req)
+        self.get_logger().info('request gemma service... Done')
+
+        if not(res.success):
+            self.get_logger().info('Gemma Response Failed')
+            raise Exception("Gemma Response Failed")
+
+        return res
+
+    def do_action(self, action_json):
+        is_valid, error_msg, action_dict = validate_custom_json(action_json)
+        if not(is_valid):
+            self.get_logger().info("Invalid generated action json : " + error_msg)
+            raise Exception("Invalid generated action json : " + error_msg)
+        
+        # TODO: Loop 종료 상세하게 구현
+        if action_dict["action"]["name"] == "end":
+            return {
+                "is_end" : True
+            }
+
+        # TODO: Control Node 호출
+
 
     def translate_text_deepl(self, text_input: str, target_lang: str, api_key: Optional[str] = None) -> str:
         actual_api_key = api_key or os.getenv("DEEPL_API_KEY")
@@ -155,6 +224,7 @@ class AgricsenseActionServer(Node):
             result = None
 
         return result.text
+    
 
 def main(args=None):
     rclpy.init(args=args)
