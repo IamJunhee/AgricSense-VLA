@@ -92,17 +92,18 @@ class AgricsenseActionServer(Node):
                 real_prompt = goal_handle.request.prompt
                 is_translated = False
 
+        previous_action_list = []
+
         for i in range(loop_limit):
             # TODO : Current location 추가
             # TODO : farm_info 추가
-            # TODO : Previous action 추가
 
             data = {
                 "cognition" : {
                     "user_prompt" : real_prompt,
                     "farm_info" : "없음",
                     "current_location" : "없음",
-                    "previous_action_json" : "없음"
+                    "previous_action_json" : str(previous_action_list)
                 },
 
                 "action" : {
@@ -135,6 +136,8 @@ class AgricsenseActionServer(Node):
 
 
                 action_result = self.do_action(res.generated_text)
+                
+                previous_action_list.append(res.generated_text)
 
                 if action_result["is_end"]:
                     # TODO: 루프 종료 시 내용 상세 구현
