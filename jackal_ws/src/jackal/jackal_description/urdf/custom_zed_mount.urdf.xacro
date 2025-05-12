@@ -8,7 +8,9 @@
         <mesh filename="package://jackal_description/meshes/support_v1_binary.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <origin xyz="0 0 0" rpy="${PI/2} 0 ${PI/2}"/>
-      <material name="light_grey" />
+      <material name="light_grey">
+        <color rgba="0.4 0.4 0.4 1.0" />
+      </material>
     </visual>
     <collision>
       <geometry>
@@ -28,7 +30,10 @@
         izz="0.001"/>
     </inertial>
   </link>
-
+  <gazebo reference="zed_mount_link">
+    <material>Gazebo/Grey</material>
+    <turnGravityOff>false</turnGravityOff>
+  </gazebo>
   <joint name="zed_mount_joint" type="fixed">
     <parent link="mid_mount"/>  <!-- 또는 front_mount, rear_mount 등 위치 선택 -->
     <child link="zed_mount_link"/>
@@ -42,7 +47,9 @@
         <mesh filename="package://jackal_description/meshes/ZED2i_binary.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <origin xyz="-0.036262 0.008969 0.017741" rpy="0 0 ${PI/2}"/>
-      <material name="black" />
+      <material name="black">
+        <color rgba="0.15 0.15 0.15 1.0" />
+      </material>
     </visual>
     <collision>
       <geometry>
@@ -64,7 +71,10 @@
         izz="0.0002836"/>
     </inertial>
   </link>
-
+  <gazebo reference="zed_2i_link">
+    <material>Gazebo/Black</material>
+    <turnGravityOff>false</turnGravityOff>
+  </gazebo>
   <joint name="zed_2i_base_joint" type="fixed">
     <parent link="zed_mount_link"/>
     <child link="zed_2i_link"/>
@@ -118,10 +128,10 @@
           <!-- vertical_fov(70도)맞춘경우 -->
           <width>1280</width>
           <height>960</height>
-          <format>B8G8R8</format>
+          <format>R8G8B8</format>
         </image>
         <clip>
-          <near>0.1</near>
+          <near>0.03</near>
           <far>20.0</far>
         </clip>
         <noise>

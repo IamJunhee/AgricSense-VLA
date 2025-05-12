@@ -1,0 +1,30 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+    <model name="potato_1">
+        <static>true</static>
+        <link name="link">
+            <visual name="visual">
+                <geometry>
+                    <mesh>
+                        <uri>model://potato_1/meshes/potato.dae</uri>
+                        <scale>0.032 0.032 0.016</scale>
+                        <submesh>
+                            <name>Potato_01_Material #26_0</name>
+                        </submesh>
+                    </mesh>                   
+                </geometry>
+            </visual>
+            <collision name="collision">
+                <geometry>
+                    <mesh>
+                        <uri>model://potato_1/meshes/potato.dae</uri>
+                        <scale>0.032 0.032 0.016</scale>
+                        <submesh>
+                            <name>Potato_01_Material #26_0</name>
+                        </submesh>
+                    </mesh>
+                </geometry>
+            </collision>
+        </link>
+    </model>
+</sdf>

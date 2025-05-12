@@ -1,16 +1,22 @@
 from launch import LaunchDescription
+from launch.substitutions import PathJoinSubstitution
 from launch_ros.actions import Node
+from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
-    return LaunchDescription([
+    config_file = PathJoinSubstitution([
+        FindPackageShare('jackal_navigation'),  # 패키지 이름
+        'config', 
+        'rtab.yaml'
+    ])
 
-        # 1. RGB + Depth + CameraInfo 동기화 (approx sync)
+    return LaunchDescription([
         Node(
             package='rtabmap_sync',
             executable='rgbd_sync',
             name='rgbd_sync',
             output='screen',
-            parameters=[{'approx_sync': True, 'queue_size': 30}],
+            parameters=[config_file],
             remappings=[
                 ('rgb/image', '/zed/image_raw'),
                 ('depth/image', '/zed/depth/image_raw'),
@@ -18,57 +24,41 @@ def generate_launch_description():
                 ('rgbd_image', '/rgbd_image')
             ]
         ),
-
-        # 2. 시각적 Odometry
         Node(
             package='rtabmap_odom',
             executable='rgbd_odometry',
             name='rgbd_odometry',
             output='screen',
-            parameters=[{
-                'frame_id': 'base_link',
-                'odom_frame_id': 'odom',
-                'publish_tf': True,
-                'approx_sync': True,
-                'queue_size': 30,
-                'use_sim_time': True
-            }],
+            parameters=[config_file],
             remappings=[
                 ('rgb/image', '/zed/image_raw'),
                 ('depth/image', '/zed/depth/image_raw'),
                 ('rgb/camera_info', '/zed/camera_info'),
-                ('odom', '/odometry/filtered'),
+                ('odom', '/odometry/visual'),
             ]
         ),
-
-        # 3. RTAB-Map SLAM
         Node(
             package='rtabmap_slam',
             executable='rtabmap',
             name='rtabmap',
             output='screen',
-            parameters=[{
-                'frame_id': 'base_link',
-                'subscribe_rgbd': True,
-                'use_sim_time': True,
-                'approx_sync': True,
-                'grid_map': True,
-                'queue_size': 30
-            }],
+            parameters=[config_file],
             remappings=[
                 ('rgb/image', '/zed/image_raw'),
                 ('depth/image', '/zed/depth/image_raw'),
                 ('rgb/camera_info', '/zed/camera_info'),
-                ('odom', '/odometry/filtered'),
+                ('odom', '/odometry/visual'),
             ]
         ),
-
-        # 4. RTAB-Map 시각화
         Node(
             package='rtabmap_viz',
             executable='rtabmap_viz',
             name='rtabmap_viz',
             output='screen',
-            parameters=[{'use_sim_time': True}]
+            parameters=[config_file],
+            remappings=[
+                ('odom', '/odometry/visual'),
+                ('rgbd_image', '/rgbd_image')
+            ]
         )
     ])

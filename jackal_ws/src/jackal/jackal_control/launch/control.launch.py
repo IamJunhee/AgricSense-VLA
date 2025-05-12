@@ -18,10 +18,6 @@ def generate_launch_description():
          'config',
          'localization_zed.yaml'],
     )
-    
-    filepath_config_twist_mux = PathJoinSubstitution(
-        [FindPackageShare('jackal_control'), 'config', 'twist_mux.yaml']
-    )
 
     config_imu_filter = PathJoinSubstitution(
         [FindPackageShare('jackal_control'),
@@ -91,7 +87,7 @@ def generate_launch_description():
             output='screen',
             parameters=[config_jackal_ekf, {'use_sim_time': use_sim_time}],
             remappings=[
-                ('/odometry/filtered', '/odometry/global')  # → navsat_transform_node가 구독하는 토픽에 맞춤
+                ('/odometry/filtered', '/odometry/global') 
             ],
         ),
 
@@ -100,7 +96,11 @@ def generate_launch_description():
             executable='navsat_transform_node',
             name='navsat_transform_node',
             output='screen',
-            parameters=[config_jackal_ekf, {'use_sim_time': use_sim_time}]
+            parameters=[config_jackal_ekf, {'use_sim_time': use_sim_time}],
+            remappings=[
+                ('/imu', '/imu/data'),
+                ('/odometry/filtered', '/odometry/local')   
+            ],
         ),
         
         # Madgwick Filter
@@ -109,13 +109,10 @@ def generate_launch_description():
             executable='imu_filter_madgwick_node',
             name='imu_filter_node',
             output='screen',
-            remappings=[
-                ('/imu/data', 'imu')  # → navsat_transform_node가 구독하는 토픽에 맞춤
-            ],
-            parameters=[config_imu_filter, {'use_sim_time': use_sim_time}]
+            parameters=[config_imu_filter, {'use_sim_time': use_sim_time}],
         ),
     ])
-    
+
     # ROS2 Controllers
     control_group_action = GroupAction([
         # ROS2 Control
@@ -139,6 +136,7 @@ def generate_launch_description():
             package='controller_manager',
             executable='spawner',
             arguments=['joint_state_broadcaster'],
+            parameters=[config_jackal_velocity_controller],
             output='screen',
         ),
 
@@ -148,16 +146,10 @@ def generate_launch_description():
             executable='spawner',
             arguments=['jackal_velocity_controller'],
             output='screen',
-        )
+        ),
+
+
     ])
-    
-    node_twist_mux = Node(
-        package='twist_mux',
-        executable='twist_mux',
-        output='screen',
-        remappings={('/cmd_vel_out', '/jackal_velocity_controller/cmd_vel_unstamped')},
-        parameters=[filepath_config_twist_mux]
-    )
 
     ld = LaunchDescription()
     ld.add_action(declare_use_sim_time_arg)
@@ -166,5 +158,4 @@ def generate_launch_description():
     ld.add_action(is_sim_arg)
     ld.add_action(localization_group_action)
     ld.add_action(control_group_action)
-    ld.add_action(node_twist_mux)
     return ld

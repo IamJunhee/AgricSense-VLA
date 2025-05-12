@@ -31,10 +31,21 @@ def generate_launch_description():
         output='screen',
     )
 
+    # Gazebo client
+    gzclient = ExecuteProcess(
+        cmd=['gzclient'],
+        output='screen',
+    )
+
     spawn_robot = Node(
         package='gazebo_ros',
         executable='spawn_entity.py',
-        arguments=['-entity', 'jackal', '-file', str(jackal_urdf_path),'-x', '0.0','-y', '0.0','-z', '0.0'], 
+        arguments=[
+            '-entity', 'jackal',
+            '-topic', 'robot_description',
+            '-x', '0.0', '-y', '0.0', '-z', '0.0',
+            '-R', '0.0', '-P', '0.0', '-Y', '0.0'
+        ],
         output='screen'
     )
 
@@ -54,12 +65,53 @@ def generate_launch_description():
         )),
         launch_arguments=[('is_sim', 'True')]
     )
+
+    launch_jackal_teleop_base = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(PathJoinSubstitution(
+            [FindPackageShare('jackal_control'), 'launch', 'teleop_base.launch.py']
+        ))
+    )
+    # 포인트클라우드 생성 노드 추가
+    pointcloud_node = Node(
+        package='depth_image_proc',
+        executable='point_cloud_xyzrgb_node',
+        name='pointcloud_generator',
+        remappings=[
+            ('image_rect', '/zed/image_raw'),
+            ('camera_info', '/zed/camera_info'),
+            ('image_depth', '/zed/depth/image_raw'),
+            ('points', '/zed/points')
+        ],
+        parameters=[{'use_sim_time': True}],
+        output='screen'
+    )
+    
+    reliable_relay_node = Node(
+        package='sensor_tools',
+        executable='reliable_relay',
+        name='reliable_relay_node',
+        output='screen',
+        parameters=[{'use_sim_time': True}]
+    )
+    
+    points_rgb_node = Node(
+        package='sensor_tools',
+        executable='bgr_to_rgb_relay',
+        name='points_rgb_node',
+        output='screen',
+        parameters=[{'use_sim_time': True}]
+    )
+    
     
     ld = LaunchDescription(ARGUMENTS)
     ld.add_action(gz_resource_path)
     ld.add_action(gzserver)
+    ld.add_action(gzclient)
     ld.add_action(launch_jackal_description)
     ld.add_action(spawn_robot)
     ld.add_action(launch_jackal_control)
-    
+    ld.add_action(launch_jackal_teleop_base)
+    ld.add_action(points_rgb_node)
+    # ld.add_action(pointcloud_node)
+    # ld.add_action(reliable_relay_node)
     return ld
