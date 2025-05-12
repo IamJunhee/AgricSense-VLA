@@ -2,15 +2,21 @@ import rclpy
 from rclpy.action import ActionServer
 from rclpy.node import Node
 
+from std_msgs.msg import Header
 from sensor_msgs.msg import Image
 from agricsense_action_interfaces.action import Agricsense
 from gemma_ros2_interface.srv import GenerateGemma
-from json_validate import validate_custom_json
+
+from .base64_util import image_to_base64
+from .json_validate import validate_custom_json
+from .websocket_util import ROS2WebSocketServer
 
 import deepl
 import json
 import os
+from pprint import pformat
 from typing import Optional
+from datetime import timezone, datetime
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -19,6 +25,7 @@ class AgricsenseActionServer(Node):
     def __init__(self):
         super().__init__('agricsense_action_server')
 
+        self.declare_parameter('control_by_human', False)
         self.declare_parameter('loop_limit', 20)
         self.declare_parameter('use_translation', False)
         self.declare_parameter('prompt_template_path', "/root/AgricSense-VLA/jackal_ws/src/gemma_ros_client/resource/prompt_ko/")
@@ -62,23 +69,34 @@ class AgricsenseActionServer(Node):
 
         # Gemma Service Client
         self.gemma = self.create_client(GenerateGemma, 'generate_gemma')
-
-        while not self.gemma.wait_for_service(timeout_sec=10.0):
-            self.get_logger().info('service not available, waiting again...')
         
         self.req = GenerateGemma.Request()
+
+        self.websocket = ROS2WebSocketServer("localhost", 9090)
+
+        self.websocket.start()
 
         self.get_logger().info('Action server is ready.')
 
 
     async def execute_callback(self, goal_handle):
         use_translation = self.get_parameter('use_translation').get_parameter_value().bool_value
+        control_by_human = self.get_parameter('control_by_human').get_parameter_value().bool_value
         loop_limit = self.get_parameter('loop_limit').get_parameter_value().integer_value
 
         result = Agricsense.Result()
         feedback = Agricsense.Feedback()
 
         real_prompt = goal_handle.request.prompt
+
+        if not control_by_human:
+            while not self.gemma.wait_for_service(timeout_sec=10.0):
+                self.get_logger().info('service not available, waiting again...')
+
+        # 작동 모드 웹소켓에 전달
+        self.websocket.broadcast_message("setOperationMode", {
+                                            "mode" : "data_collection" if control_by_human else "execution_monitoring"
+                                            })
 
         if use_translation:
             is_translated = True
@@ -103,41 +121,51 @@ class AgricsenseActionServer(Node):
                     "user_prompt" : real_prompt,
                     "farm_info" : "없음",
                     "current_location" : "없음",
-                    "previous_action_json" : str(previous_action_list)
+                    "previous_action_json" : json.dumps(previous_action_list, indent=2, ensure_ascii=False)
                 },
-
+                "reasoning" : {},
                 "action" : {
-                    "tools_list_json" : self.tools_json,
+                    "tools_list_json" : json.dumps(self.tools_json, indent=2, ensure_ascii=False),
                 }
             }
 
             rendered_prompt = {key: value.render(data[key]) for key, value in self.prompt_template.items()}
 
+            self.scene_data_to_websocket(rendered_prompt)
+
             try:
-                # Cognition
-                res = await self.call_gemma(rendered_prompt["cognition"])
-                feedback.thought = "Cognition of loop {0} : {1}".format(i, res.generated_text)
-                self.get_logger().info(feedback.thought)
-                goal_handle.publish_feedback(feedback)
+                if (control_by_human):
+                    action = self.loop_by_human()
 
-                # Reasoning
-                res = await self.call_gemma(prompt = rendered_prompt["reasoning"],
-                                            context = res.updated_context_json)
-                feedback.thought = "Reasoning of loop {0} : {1}".format(i, res.generated_text)
-                self.get_logger().info(feedback.thought)
-                goal_handle.publish_feedback(feedback)
+                else:
+                    # Cognition
+                    res = await self.call_gemma(rendered_prompt["cognition"])
+                    feedback.thought = "Cognition of loop {0} : {1}".format(i, res.generated_text)
+                    self.get_logger().info(feedback.thought)
+                    goal_handle.publish_feedback(feedback)
+
+                    # Reasoning
+                    res = await self.call_gemma(prompt = rendered_prompt["reasoning"],
+                                                context = res.updated_context_json)
+                    feedback.thought = "Reasoning of loop {0} : {1}".format(i, res.generated_text)
+                    self.get_logger().info(feedback.thought)
+                    goal_handle.publish_feedback(feedback)
+                    
+                    # Action
+                    res = await self.call_gemma(prompt = rendered_prompt["action"],
+                                                context = res.updated_context_json)
+                    feedback.thought = "Selected Action of loop {0} : {1}".format(i, res.generated_text)
+                    self.get_logger().info(feedback.thought)
+                    goal_handle.publish_feedback(feedback)
+
+                    # TODO: 답변한 내용 websocket에 전달, context 활용
+                    action = res.generated_text
+
+
+
+                action_result = self.do_action(action)
                 
-                # Action
-                res = await self.call_gemma(prompt = rendered_prompt["action"],
-                                            context = res.updated_context_json)
-                feedback.thought = "Selected Action of loop {0} : {1}".format(i, res.generated_text)
-                self.get_logger().info(feedback.thought)
-                goal_handle.publish_feedback(feedback)
-
-
-                action_result = self.do_action(res.generated_text)
-                
-                previous_action_list.append(res.generated_text)
+                previous_action_list.append(action)
 
                 if action_result["is_end"]:
                     # TODO: 루프 종료 시 내용 상세 구현
@@ -172,11 +200,11 @@ class AgricsenseActionServer(Node):
         result.success = True
         return result
 
-    def add_rbg_to_request(self, msg):
+    def add_rbg_to_request(self, msg: Image):
         self.req.has_rgb_image = True
         self.req.rgb_image = msg
 
-    def add_depth_to_request(self, msg):
+    def add_depth_to_request(self, msg: Image):
         self.req.has_d_image = True
         self.req.d_image = msg
 
@@ -208,6 +236,44 @@ class AgricsenseActionServer(Node):
             }
 
         # TODO: Control Node 호출
+
+    def loop_by_human(self):
+        # TODO: 사람이 작성한 답변 받아서
+        # TODO: Action 저장
+        # TODO: Action JSON String 반환
+        pass
+
+    def scene_data_to_websocket(self, prompt_dict):
+        scene_data = {
+            "prompts" : {
+                "cognition": prompt_dict["cognition"],
+                "thinking": prompt_dict["reasoning"],
+                "action": prompt_dict["action"] 
+            },
+            "vision" : {
+                "rgbImage" : {
+                    "data" : image_to_base64(self.req.rgb_image, self.get_logger(), ".jpg"),
+                    "format" : "jpeg",
+                    "width" : self.req.rgb_image.width,
+                    "height" : self.req.rgb_image.height
+                },
+                "depthImage" : {
+                    "data" : image_to_base64(self.req.d_image, self.get_logger(), ".png"),
+                    "format" : "png",
+                    "width" : self.req.d_image.width,
+                    "height" : self.req.d_image.height,
+                    "encoding" : "16UC1",
+                    "unit" : "mm",
+                    "scale" : "1.0"
+                },
+                "imageTimestamp" : datetime.fromtimestamp(
+                    self.req.rgb_image.header.stamp.sec + self.req.rgb_image.header.stamp.nanosec / 1e9, 
+                    tz=timezone.utc
+                    ).isoformat(timespec='milliseconds').replace('+00:00', 'Z')
+            }
+        }
+
+        self.websocket.broadcast_message("sceneData", scene_data)
 
 
     def translate_text_deepl(self, text_input: str, target_lang: str, api_key: Optional[str] = None) -> str:
