@@ -33,17 +33,17 @@ class ROS2WebSocketServer:
 
         # 콜백 함수들 (path 인자 제거)
         self._on_server_started_callback: Optional[Callable[[], None]] = None
-        self._on_client_connected_callback: Optional[Callable[[websockets.WebSocketServerProtocol], None]] = None # path 제거
-        self._on_client_disconnected_callback: Optional[Callable[[websockets.WebSocketServerProtocol, bool, int, str], None]] = None # path 제거
-        self._on_message_callback: Optional[Callable[[websockets.WebSocketServerProtocol, Dict[str, Any]], None]] = None # path 제거
+        self._on_client_connected_callback: Optional[Callable[[websockets.WebSocketServerProtocol], None]] = None
+        self._on_client_disconnected_callback: Optional[Callable[[websockets.WebSocketServerProtocol, bool, int, str], None]] = None
+        self._on_message_callback: Optional[Callable[[websockets.WebSocketServerProtocol, Dict[str, Any]], None]] = None
         self._on_error_callback: Optional[Callable[[Exception], None]] = None
         self._on_server_stopped_callback: Optional[Callable[[], None]] = None
 
     def register_callbacks(self, 
                            on_server_started: Optional[Callable[[], None]] = None,
-                           on_client_connected: Optional[Callable[[websockets.WebSocketServerProtocol], None]] = None, # path 제거
-                           on_client_disconnected: Optional[Callable[[websockets.WebSocketServerProtocol, bool, int, str], None]] = None, # path 제거
-                           on_message: Optional[Callable[[websockets.WebSocketServerProtocol, Dict[str, Any]], None]] = None, # path 제거
+                           on_client_connected: Optional[Callable[[websockets.WebSocketServerProtocol], None]] = None,
+                           on_client_disconnected: Optional[Callable[[websockets.WebSocketServerProtocol, bool, int, str], None]] = None,
+                           on_message: Optional[Callable[[websockets.WebSocketServerProtocol, Dict[str, Any]], None]] = None,
                            on_error: Optional[Callable[[Exception], None]] = None,
                            on_server_stopped: Optional[Callable[[], None]] = None):
         if on_server_started: self._on_server_started_callback = on_server_started
@@ -73,11 +73,10 @@ class ROS2WebSocketServer:
         path 정보는 이 핸들러에서 직접 사용하지 않습니다.
         """
         self._connected_clients.add(websocket)
-        # path 정보가 없으므로 로깅에서 제거하거나 기본값 사용
         logger.info(f"클라이언트 연결됨: {websocket.remote_address} (총 클라이언트: {len(self._connected_clients)})")
         if self._on_client_connected_callback:
             try:
-                self._on_client_connected_callback(websocket) # path 인자 없이 호출
+                self._on_client_connected_callback(websocket)
             except Exception as e:
                 logger.error(f"on_client_connected 콜백 실행 중 오류: {e}")
 
@@ -88,7 +87,7 @@ class ROS2WebSocketServer:
                     logger.debug(f"메시지 수신 ({websocket.remote_address}): {message}")
                     if self._on_message_callback:
                         try:
-                            self._on_message_callback(websocket, message) # path 인자 없이 호출
+                            self._on_message_callback(websocket, message)
                         except Exception as e:
                             logger.error(f"on_message 콜백 실행 중 오류: {e} (메시지: {message})")
                 except json.JSONDecodeError:
@@ -101,7 +100,7 @@ class ROS2WebSocketServer:
             if self._on_client_disconnected_callback:
                 try:
                     was_clean = e.code == 1000 or e.code == 1001
-                    self._on_client_disconnected_callback(websocket, was_clean, e.code, e.reason or "") # path 인자 없이 호출
+                    self._on_client_disconnected_callback(websocket, was_clean, e.code, e.reason or "")
                 except Exception as cb_e:
                     logger.error(f"on_client_disconnected 콜백 실행 중 오류: {cb_e}")
         

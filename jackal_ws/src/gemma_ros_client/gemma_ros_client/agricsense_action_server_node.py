@@ -131,18 +131,27 @@ class AgricsenseActionServer(Node):
 
             rendered_prompt = {key: value.render(data[key]) for key, value in self.prompt_template.items()}
 
-            self.scene_data_to_websocket(rendered_prompt)
+            timestamp = self.scene_data_to_websocket(rendered_prompt)
 
             try:
                 if (control_by_human):
                     action = self.loop_by_human()
 
                 else:
+                    agent_response= dict(cognition = "", reasoning = "", action = "")
+
                     # Cognition
                     res = await self.call_gemma(rendered_prompt["cognition"])
                     feedback.thought = "Cognition of loop {0} : {1}".format(i, res.generated_text)
                     self.get_logger().info(feedback.thought)
                     goal_handle.publish_feedback(feedback)
+                    agent_response["cognition"] = res.generated_text
+
+                    self.agent_response_to_websocket(agent_response, timestamp)
+
+                    # 다시 이미지를 전송할 필요는 없음
+                    self.req.has_rgb_image = False
+                    self.req.has_d_image = False
 
                     # Reasoning
                     res = await self.call_gemma(prompt = rendered_prompt["reasoning"],
@@ -150,18 +159,27 @@ class AgricsenseActionServer(Node):
                     feedback.thought = "Reasoning of loop {0} : {1}".format(i, res.generated_text)
                     self.get_logger().info(feedback.thought)
                     goal_handle.publish_feedback(feedback)
-                    
+                    agent_response["reasoning"] = res.generated_text
+
+                    self.agent_response_to_websocket(agent_response, timestamp)
+
+                    # 다시 이미지를 전송할 필요는 없음
+                    self.req.has_rgb_image = False
+                    self.req.has_d_image = False
+
                     # Action
                     res = await self.call_gemma(prompt = rendered_prompt["action"],
                                                 context = res.updated_context_json)
                     feedback.thought = "Selected Action of loop {0} : {1}".format(i, res.generated_text)
                     self.get_logger().info(feedback.thought)
                     goal_handle.publish_feedback(feedback)
+                    agent_response["action"] = res.generated_text
 
-                    # TODO: 답변한 내용 websocket에 전달, context 활용
+                    self.agent_response_to_websocket(agent_response, timestamp)
+
                     action = res.generated_text
 
-
+                    self.req = GenerateGemma.Request()
 
                 action_result = self.do_action(action)
                 
@@ -210,8 +228,9 @@ class AgricsenseActionServer(Node):
 
     async def call_gemma(self, prompt, context : str = ""):
         self.req.prompt = prompt
-        if not(context):
-            self.req.prompt = context
+        if context:
+            self.get_logger().info("Add Context")
+            self.req.context_json = context
 
         self.get_logger().info('request gemma service... \n{}'.format(self.req.prompt))
         res = await self.gemma.call_async(self.req)
@@ -244,6 +263,11 @@ class AgricsenseActionServer(Node):
         pass
 
     def scene_data_to_websocket(self, prompt_dict):
+        timestamp = datetime.fromtimestamp(
+                    self.req.rgb_image.header.stamp.sec + self.req.rgb_image.header.stamp.nanosec / 1e9, 
+                    tz=timezone.utc
+                    ).isoformat(timespec='milliseconds').replace('+00:00', 'Z')
+
         scene_data = {
             "prompts" : {
                 "cognition": prompt_dict["cognition"],
@@ -266,14 +290,27 @@ class AgricsenseActionServer(Node):
                     "unit" : "mm",
                     "scale" : "1.0"
                 },
-                "imageTimestamp" : datetime.fromtimestamp(
-                    self.req.rgb_image.header.stamp.sec + self.req.rgb_image.header.stamp.nanosec / 1e9, 
-                    tz=timezone.utc
-                    ).isoformat(timespec='milliseconds').replace('+00:00', 'Z')
+                "imageTimestamp" : timestamp
             }
         }
 
         self.websocket.broadcast_message("sceneData", scene_data)
+
+        return timestamp
+
+    def agent_response_to_websocket(self, response_dict, timestamp):
+        response_data = {
+            "responses" : {
+                "cognition": response_dict["cognition"],
+                "thinking": response_dict["reasoning"],
+                "action": response_dict["action"] 
+            },
+            "associatedImageTimestamp" : timestamp
+        }
+
+        self.websocket.broadcast_message("agentResponse", response_data)
+
+        return timestamp
 
 
     def translate_text_deepl(self, text_input: str, target_lang: str, api_key: Optional[str] = None) -> str:

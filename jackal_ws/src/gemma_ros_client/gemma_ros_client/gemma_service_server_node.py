@@ -56,6 +56,7 @@ class GemmaServiceServerNode(Node):
             "max_new_tokens": max_tokens if max_tokens > 0 else 200
         }
         if context_dict is not None:
+            self.get_logger().info("요청에 Context 포함")
             request_payload["context"] = context_dict
 
         if rgb_image:
@@ -100,6 +101,7 @@ class GemmaServiceServerNode(Node):
         context_dict = None
         if request.context_json and request.context_json != "{}":
             try:
+                self.get_logger().info("Context 처리 시도")
                 context_dict = json.loads(request.context_json)
             except json.JSONDecodeError:
                 self.get_logger().warning(f"요청의 context JSON 파싱 실패: {request.context_json}")
