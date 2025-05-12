@@ -24,7 +24,11 @@ def generate_launch_description():
          'config',
          'imu_filter.yaml'],
     )
-
+    
+    filepath_config_twist_mux = PathJoinSubstitution(
+        [FindPackageShare('jackal_control'), 'config', 'twist_mux.yaml']
+    )
+    
     config_jackal_velocity_controller = PathJoinSubstitution(
         [FindPackageShare('jackal_control'),
         'config',
@@ -147,6 +151,14 @@ def generate_launch_description():
             arguments=['jackal_velocity_controller'],
             output='screen',
         ),
+        
+        Node(
+            package='twist_mux',
+            executable='twist_mux',
+            output='screen',
+            remappings={('/cmd_vel_out', '/jackal_velocity_controller/cmd_vel_unstamped')},
+            parameters=[filepath_config_twist_mux]
+        )
 
 
     ])

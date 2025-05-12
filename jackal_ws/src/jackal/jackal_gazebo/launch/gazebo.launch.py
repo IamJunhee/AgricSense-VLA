@@ -66,11 +66,6 @@ def generate_launch_description():
         launch_arguments=[('is_sim', 'True')]
     )
 
-    launch_jackal_teleop_base = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(PathJoinSubstitution(
-            [FindPackageShare('jackal_control'), 'launch', 'teleop_base.launch.py']
-        ))
-    )
     # 포인트클라우드 생성 노드 추가
     pointcloud_node = Node(
         package='depth_image_proc',
@@ -110,7 +105,6 @@ def generate_launch_description():
     ld.add_action(launch_jackal_description)
     ld.add_action(spawn_robot)
     ld.add_action(launch_jackal_control)
-    ld.add_action(launch_jackal_teleop_base)
     ld.add_action(points_rgb_node)
     # ld.add_action(pointcloud_node)
     # ld.add_action(reliable_relay_node)
