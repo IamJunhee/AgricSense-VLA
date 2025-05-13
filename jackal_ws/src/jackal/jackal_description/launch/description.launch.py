@@ -36,6 +36,7 @@ def generate_robot_description(context):
         parameters=[{
             'robot_description': robot_description_xml,
             'use_sim_time': True,
+            'use_sim_time': True
         }],
         output='screen'
     )

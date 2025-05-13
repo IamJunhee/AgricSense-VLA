@@ -12,6 +12,7 @@
                             <name>Potato_02_Material #26_0</name>
                         </submesh>
                     </mesh>
+                    
                 </geometry>
             </visual>
             <collision name="collision">
@@ -23,6 +24,9 @@
                             <name>Potato_02_Material #26_0</name>
                         </submesh>
                     </mesh>
+                    <box>
+                        <size>0.4 0.4 0.3</size>
+                    </box>
                 </geometry>
             </collision>
         </link>
