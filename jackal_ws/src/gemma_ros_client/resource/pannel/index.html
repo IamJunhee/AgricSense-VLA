@@ -333,7 +333,7 @@
             function handleSceneData(payload) {
                 if (payload.prompts) {
                     question1Div.textContent = payload.prompts.cognition || "인지 프롬프트 없음";
-                    question2Div.textContent = payload.prompts.thinking || "사고 프롬프트 없음";
+                    question2Div.textContent = payload.prompts.reasoning || "사고 프롬프트 없음";
                     question3Div.textContent = payload.prompts.action || "행동 프롬프트 없음";
                 }
 
@@ -361,7 +361,7 @@
                 if (currentOperationMode === "execution_monitoring") {
                     if (payload.responses) {
                         input1Textarea.value = payload.responses.cognition || "";
-                        input2Textarea.value = payload.responses.thinking || "";
+                        input2Textarea.value = payload.responses.reasoning || "";
                         input3Textarea.value = payload.responses.action || "";
                         adjustAllTextareasHeight();
                     }
@@ -391,7 +391,7 @@
                     }
                     const userResponses = {
                         cognition: input1Textarea.value,
-                        thinking: input2Textarea.value,
+                        reasoning: input2Textarea.value,
                         action: input3Textarea.value
                     };
                     const payload = {

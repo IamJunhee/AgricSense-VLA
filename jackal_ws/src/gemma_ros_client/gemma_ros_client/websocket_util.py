@@ -1,5 +1,3 @@
-# ros2_websocket_server_util.py
-
 import asyncio
 import websockets
 import json
