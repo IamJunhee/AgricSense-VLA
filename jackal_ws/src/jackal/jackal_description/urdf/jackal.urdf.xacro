@@ -222,14 +222,14 @@
       <geometry>
         <cylinder radius="0.026" length="0.016" />
       </geometry>
-      <origin xyz="0 0 0.008" />
+      <origin xyz="-0.180 0.126 0.1895" />
       <material name="black" />
     </visual>
   </link>
   <joint name="navsat_joint" type="fixed">
     <parent link="chassis_link" />
     <child link="navsat_link" />
-    <origin xyz="-0.180 0.126 0.1815" />
+    <origin xyz="0 0 0" />
   </joint>
 
   <link name="mid_mount"></link>

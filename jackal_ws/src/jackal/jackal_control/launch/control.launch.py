@@ -24,11 +24,7 @@ def generate_launch_description():
          'config',
          'imu_filter.yaml'],
     )
-    
-    filepath_config_twist_mux = PathJoinSubstitution(
-        [FindPackageShare('jackal_control'), 'config', 'twist_mux.yaml']
-    )
-    
+
     config_jackal_velocity_controller = PathJoinSubstitution(
         [FindPackageShare('jackal_control'),
         'config',
@@ -81,7 +77,10 @@ def generate_launch_description():
             executable='ekf_node',
             name='ekf_filter_node_odom',
             output='screen',
-            parameters=[config_jackal_ekf, {'use_sim_time': use_sim_time}]
+            parameters=[config_jackal_ekf, {'use_sim_time': use_sim_time}],
+            remappings=[
+                ('/odometry/filtered', '/odometry/filtered/local') 
+            ],
         ),
         
         Node(
@@ -91,7 +90,7 @@ def generate_launch_description():
             output='screen',
             parameters=[config_jackal_ekf, {'use_sim_time': use_sim_time}],
             remappings=[
-                ('/odometry/filtered', '/odometry/global') 
+                ('/odometry/filtered', '/odometry/filtered/global') 
             ],
         ),
 
@@ -103,7 +102,7 @@ def generate_launch_description():
             parameters=[config_jackal_ekf, {'use_sim_time': use_sim_time}],
             remappings=[
                 ('/imu', '/imu/data'),
-                ('/odometry/filtered', '/odometry/local')   
+                ('/odometry/filtered', '/odometry/filtered/global')   
             ],
         ),
         
@@ -151,14 +150,6 @@ def generate_launch_description():
             arguments=['jackal_velocity_controller'],
             output='screen',
         ),
-        
-        Node(
-            package='twist_mux',
-            executable='twist_mux',
-            output='screen',
-            remappings={('/cmd_vel_out', '/jackal_velocity_controller/cmd_vel_unstamped')},
-            parameters=[filepath_config_twist_mux]
-        )
 
 
     ])
@@ -168,6 +159,7 @@ def generate_launch_description():
     ld.add_action(gazebo_controllers_arg)
     ld.add_action(robot_description_command_arg)
     ld.add_action(is_sim_arg)
-    ld.add_action(localization_group_action)
     ld.add_action(control_group_action)
+    ld.add_action(localization_group_action)
+    
     return ld

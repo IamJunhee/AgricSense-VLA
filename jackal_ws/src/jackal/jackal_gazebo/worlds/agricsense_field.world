@@ -26,7 +26,7 @@
             <latitude_deg>37.5665</latitude_deg>    <!-- 위도 -->
             <longitude_deg>126.9780</longitude_deg> <!-- 경도 -->
             <elevation>0</elevation>
-            <heading_deg>0</heading_deg>
+            <heading_deg>180</heading_deg>
         </spherical_coordinates>
         <scene>
             <ambient>1 1 1 1</ambient>
