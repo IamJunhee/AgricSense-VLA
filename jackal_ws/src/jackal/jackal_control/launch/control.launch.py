@@ -5,7 +5,7 @@ from launch.substitutions import Command, FindExecutable, PathJoinSubstitution, 
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.parameter_descriptions import ParameterValue
-
+from launch.actions import TimerAction
 
 def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time')
@@ -111,12 +111,17 @@ def generate_launch_description():
         ),
         
         # Madgwick Filter
-        Node(
-            package='imu_filter_madgwick',
-            executable='imu_filter_madgwick_node',
-            name='imu_filter_node',
-            output='screen',
-            parameters=[config_imu_filter, {'use_sim_time': use_sim_time}],
+        TimerAction(
+            period=10.0,
+            actions=[
+                Node(
+                    package='imu_filter_madgwick',
+                    executable='imu_filter_madgwick_node',
+                    name='imu_filter_node',
+                    output='screen',
+                    parameters=[config_imu_filter, {'use_sim_time': use_sim_time}],
+                )
+            ]
         ),
     ])
     

@@ -23,7 +23,9 @@
     </light>
     <spherical_coordinates>
       <surface_model>EARTH_WGS84</surface_model>
-      <latitude_deg>37.5665</latitude_deg>    <longitude_deg>126.9780</longitude_deg> <elevation>0</elevation>
+      <latitude_deg>37.5665</latitude_deg>    
+      <longitude_deg>126.9780</longitude_deg> 
+      <elevation>0</elevation>
       <heading_deg>180</heading_deg>
     </spherical_coordinates>
     <scene>
