@@ -91,7 +91,7 @@ def generate_launch_description():
    
     ld.add_action(declare_params_file_cmd)
     ld.add_action(declare_use_sim_time_cmd)
-    ld.add_action(depthimage_to_laserscan_node)
+    # ld.add_action(depthimage_to_laserscan_node)
     # ld.add_action(amcl_node)
     ld.add_action(map_server_node)
     ld.add_action(lifecycle_manager_localization_node)

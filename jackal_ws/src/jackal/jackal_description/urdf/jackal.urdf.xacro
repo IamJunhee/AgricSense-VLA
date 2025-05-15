@@ -292,7 +292,7 @@
   </xacro:if>
 
   <!-- 우리 프로젝트에 필요한 zed카메라 장착 -->
-  <xacro:include filename="$(find jackal_description)/urdf/custom_zed_mount.urdf.xacro"/>
+  <xacro:include filename="$(find jackal_description)/urdf/custom_mount.urdf.xacro"/>
 
   <!-- Optional standard accessories, including their simulation data. The rendering
        of these into the final description is controlled by optenv variables, which

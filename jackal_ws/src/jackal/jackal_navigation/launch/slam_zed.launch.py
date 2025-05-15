@@ -27,18 +27,18 @@ def generate_launch_description():
             description='Full path to the slam_zed.yaml parameter file'
         ),
 
-        Node(
-            package='depthimage_to_laserscan',
-            executable='depthimage_to_laserscan_node',
-            name='depthimage_to_laserscan',
-            output='screen',
-            parameters=[LaunchConfiguration('params_file')],
-            remappings=[
-                ('/scan', '/zed/scan'),  # → navsat_transform_node가 구독하는 토픽에 맞춤
-                ('depth', '/zed/depth/image_raw'),
-                ('depth_camera_info', '/zed/depth/camera_info')
-            ],
-        ),
+        # Node(
+        #     package='depthimage_to_laserscan',
+        #     executable='depthimage_to_laserscan_node',
+        #     name='depthimage_to_laserscan',
+        #     output='screen',
+        #     parameters=[LaunchConfiguration('params_file')],
+        #     remappings=[
+        #         ('/scan', '/zed/scan'),  # → navsat_transform_node가 구독하는 토픽에 맞춤
+        #         ('depth', '/zed/depth/image_raw'),
+        #         ('depth_camera_info', '/zed/depth/camera_info')
+        #     ],
+        # ),
 
         Node(
             package='slam_toolbox',
