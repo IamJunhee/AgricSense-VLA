@@ -18,6 +18,9 @@ def generate_launch_description():
          'config',
          'localization_zed.yaml'],
     )
+    filepath_config_twist_mux = PathJoinSubstitution(
+        [FindPackageShare('jackal_control'), 'config', 'twist_mux.yaml']
+    )
 
     config_imu_filter = PathJoinSubstitution(
         [FindPackageShare('jackal_control'),
@@ -67,7 +70,13 @@ def generate_launch_description():
         Command(LaunchConfiguration('robot_description_command')),
         value_type=str
     )
-
+    node_twist_mux = Node(
+        package='twist_mux',
+        executable='twist_mux',
+        output='screen',
+        remappings={('/cmd_vel_out', '/jackal_velocity_controller/cmd_vel_unstamped')},
+        parameters=[filepath_config_twist_mux]
+    )
     # Localization
     localization_group_action = GroupAction([
         # Extended Kalman Filter
@@ -161,5 +170,5 @@ def generate_launch_description():
     ld.add_action(is_sim_arg)
     ld.add_action(control_group_action)
     ld.add_action(localization_group_action)
-    
+    ld.add_action(node_twist_mux)
     return ld
