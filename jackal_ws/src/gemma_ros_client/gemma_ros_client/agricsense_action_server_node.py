@@ -11,6 +11,7 @@ from gemma_ros2_interface.srv import GenerateGemma # 실제 서비스 정의로 
 from .base64_util import image_to_base64
 from .json_validate import validate_custom_json
 from .websocket_util import ROS2WebSocketServer
+from .action_launcher import ActionLauncher
 
 import deepl
 import json
@@ -61,6 +62,8 @@ class AgricsenseActionServer(Node):
         self.websocket = ROS2WebSocketServer("localhost", 9090)
         self.websocket.register_callbacks(on_message=self.user_annotation_callback)
         self.websocket.start()
+
+        self.action_launcher = ActionLauncher()
 
         self.on_message_event = threading.Event()
         self.get_logger().info('Agricsense Action Server is ready.')
@@ -193,7 +196,7 @@ class AgricsenseActionServer(Node):
                     goal_handle.abort(); result.success = False; self.active_goal_handle = None
                     return result
 
-                action_result = self.do_action(self.current_action)
+                action_result = await self.do_action(self.current_action)
                 
                 try:
                     action_obj = json.loads(self.current_action) if isinstance(self.current_action, str) else self.current_action
@@ -265,22 +268,15 @@ class AgricsenseActionServer(Node):
             raise Exception(f"Gemma Response Failed: {err_msg}")
         return res
 
-    def do_action(self, action_content: Any) -> Dict[str, Any]:
+    async def do_action(self, action_content: str) -> Dict[str, Any]:
         action_dict = {}
         is_valid = False
         error_msg = ""
 
         if isinstance(action_content, str):
             is_valid, error_msg, action_dict, = validate_custom_json(action_content)
-        elif isinstance(action_content, dict): # 이미 dict 형태일 경우 (예: user_annotation_callback에서 직접 dict로 설정)
-            action_dict = action_content # 직접 할당
-            # 필요하다면 여기서 action_dict의 유효성 검사 추가
-            if "action" in action_dict and isinstance(action_dict["action"], dict) and "name" in action_dict["action"]:
-                is_valid = True
-            else:
-                error_msg = "Provided action dictionary is missing 'action' or 'action.name' keys."
         else:
-            error_msg = "action_content is not a string or dictionary."
+            error_msg = "action_content is not a string."
 
         if not is_valid:
             log_msg = f"Invalid action content: {error_msg}. Content was: {str(action_content)[:200]}"
@@ -288,11 +284,17 @@ class AgricsenseActionServer(Node):
             raise ValueError(log_msg)
 
         self.get_logger().info(f"Validated action: {action_dict.get('action', {}).get('name', 'N/A')}")
+        
+        # TODO: 작업 완료 후 로직
         if action_dict.get("action", {}).get("name") == "end":
             return {"is_end": True}
         
+        # TODO: Action 실행 로직
         self.get_logger().info(f"Executing tool: {action_dict['action']['name']} with params {action_dict['action'].get('parameters', {})}")
-        return {"is_end": False, "message": "Action executed (simulated)"}
+        
+        action_result = await self.action_launcher.launch_action(action_dict)
+        
+        return { "is_end": False, "result": action_result }
 
     def scene_data_to_websocket(self, prompt_dict: Dict[str, str]) -> str:
         rgb_image_data, rgb_width, rgb_height = "", 0, 0
@@ -370,6 +372,7 @@ def main(args=None):
     agricsense_action_server = AgricsenseActionServer()
     executor = MultiThreadedExecutor()
     executor.add_node(agricsense_action_server)
+    executor.add_node(agricsense_action_server.action_launcher)
     try:
         executor.spin()
     except KeyboardInterrupt:

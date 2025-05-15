@@ -16,6 +16,32 @@
     }
   },
   {
+    "name": "move",
+    "description": "로봇을 절대 좌표 기준 지정된 좌표와 방향으로 이동시킵니다.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "float",
+          "description": "절대 좌표계 기준, X좌표"
+        },
+        "y": {
+          "type": "float",
+          "description": "절대 좌표계 기준, Y좌표"
+        },
+        "angle": {
+          "type": "float",
+          "description": "로봇이 바라볼 방향. 각도 단위는 도(degree)이며, 절대 좌표계 기준임"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "angle"
+      ]
+    }
+  },
+  {
     "name": "end",
     "description": "사용자의 명령 수행 완료 / 더 이상 할 수 있는 것이 없는 경우 등 임무 종료 조건 충족 시 사용.",
     "parameters": {

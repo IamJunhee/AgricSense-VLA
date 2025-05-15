@@ -1,3 +1,0 @@
-string command
-float32 angular_velocity
-float32 angle_degree

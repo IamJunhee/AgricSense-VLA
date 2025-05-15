@@ -71,7 +71,7 @@ def generate_launch_description():
     ld = LaunchDescription(ARGUMENTS)
     ld.add_action(gz_resource_path)
     ld.add_action(gzserver)
-    ld.add_action(gzclient)
+    # ld.add_action(gzclient)
     ld.add_action(launch_jackal_description)
     ld.add_action(spawn_robot)
     ld.add_action(launch_jackal_control)
