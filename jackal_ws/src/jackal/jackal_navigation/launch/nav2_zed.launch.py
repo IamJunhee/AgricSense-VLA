@@ -92,15 +92,6 @@ def generate_launch_description():
             ('depth_camera_info', '/zed/depth/camera_info')
         ],
     )
-
-    publish_map_pointcloud=Node(
-        package='sensor_tools',
-        executable='pub_map_ply',
-        name='pub_map_ply',
-        output='screen',
-        parameters=[{'use_sim_time': True,
-                    'map_path': map_ply_dir}]
-    )
     
     ld = LaunchDescription()
    
@@ -112,5 +103,4 @@ def generate_launch_description():
     ld.add_action(lifecycle_manager_localization_node)
     ld.add_action(nav2_bringup_cmd)
     ld.add_action(rviz_node)
-    ld.add_action(publish_map_pointcloud)
     return ld

@@ -173,5 +173,5 @@ def generate_launch_description():
     ld.add_action(is_sim_arg)
     ld.add_action(control_group_action)
     ld.add_action(localization_group_action)
-    
+    ld.add_action(node_twist_mux)
     return ld
