@@ -111,17 +111,24 @@ def generate_launch_description():
         ),
         
         # Madgwick Filter
-        TimerAction(
-            period=10.0,
-            actions=[
-                Node(
+        # TimerAction(
+        #     period=10.0,
+        #     actions=[
+        #         Node(
+        #             package='imu_filter_madgwick',
+        #             executable='imu_filter_madgwick_node',
+        #             name='imu_filter_node',
+        #             output='screen',
+        #             parameters=[config_imu_filter, {'use_sim_time': use_sim_time}],
+        #         )
+        #     ]
+        # ),
+        Node(
                     package='imu_filter_madgwick',
                     executable='imu_filter_madgwick_node',
                     name='imu_filter_node',
                     output='screen',
                     parameters=[config_imu_filter, {'use_sim_time': use_sim_time}],
-                )
-            ]
         ),
     ])
     
