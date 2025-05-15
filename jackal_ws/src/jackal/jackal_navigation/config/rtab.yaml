@@ -1,0 +1,87 @@
+
+
+rgbd_sync:
+  ros__parameters:
+    approx_sync: true
+    approx_sync_max_interval: 0.5
+    sync_queue_size: 30
+    topic_queue_size: 10
+    depth_scale: 1.0
+    qos: 0
+    qos_camera_info: 0
+    use_sim_time: true
+
+rgbd_odometry:
+  ros__parameters:
+    frame_id: "base_link"
+    odom_frame_id: "odom"
+    publish_tf: true
+    approx_sync_max_interval: 0.05
+    sync_queue_size: 30
+    topic_queue_size: 10
+    guess_frame_id: ""
+    wait_imu_to_init: false
+    decimation: 2
+    min_depth: 0.2
+    max_depth: 5.0
+    visual_odometry: true
+    use_sim_time: true
+
+rtabmap:
+  ros__parameters:
+    delete_db_on_start: true
+    subscribe_odom_info: true
+    subscribe_imu: false
+    frame_id: "base_link"
+    map_frame_id: "map"
+    odom_frame_id: "odom"
+    publish_tf: true
+    subscribe_depth: false
+    subscribe_rgbd: true
+    subscribe_stereo: false
+    approx_sync: true
+    approx_sync_max_interval: 0.05
+    queue_size: 30
+    rgbd_cameras: 1
+    RGBD/LinearUpdate: '0.2'
+    RGBD/AngularUpdate: '0.1'
+    Rtabmap/LoopThr: '0.3'
+    Kp/MaxDepth: '20'
+    Kp/MinDepth: '0.01'
+    RGBD/ProximityPathMaxNeighbors: '5'    # loop 후보 범위 제한
+    Reg/Force3DoF: 'true'                   # 평면기반 안정성 ↑
+    Rtabmap/LoopThr: '0.35'              # 유사도 허용 기준 강화
+    Rtabmap/MaxLoopClosureLinks: '1'       # 한 시점당 loop 1개만 허용 
+    RGBD/ProximityBySpace: 'true'
+    Mem/IncrementalMemory: 'true'
+    Mem/InitWMWithAllNodes: 'false'
+    Optimizer/Strategy: '1'
+    Rtabmap/DetectionRate: '1.0'
+    Grid/FromDepth: true
+    Grid/3D: 'false'
+    Grid/RangeMin: '0.2'
+    Grid/RangeMax: '5.0'
+    use_sim_time: true
+
+rtabmap_viz:
+  ros__parameters:
+    subscribe_depth: false
+    subscribe_rgb: false
+    subscribe_stereo: false
+    subscribe_rgbd: true
+    subscribe_scan: false
+    subscribe_scan_cloud: false
+    subscribe_user_data: false
+    subscribe_odom_info: false
+    frame_id: "base_link"
+    odom_frame_id: "odom"
+    wait_for_transform: 0.2
+    approx_sync: true
+    topic_queue_size: 10
+    sync_queue_size: 30
+    qos_image: 0
+    qos_scan: 0
+    qos_odom: 0
+    qos_camera_info: 0
+    qos_user_data: 0
+    use_sim_time: true

@@ -17,6 +17,13 @@
             </visual>
             <collision name="collision">
                 <geometry>
+                    <mesh>
+                        <uri>model://potato_1/meshes/potato.dae</uri>
+                        <scale>0.04 0.04 0.02</scale>
+                        <submesh>
+                            <name>Potato_01_Material #26_0</name>
+                        </submesh>
+                    </mesh>
                     <box>
                         <size>0.4 0.4 0.3</size>
                     </box>

@@ -31,10 +31,21 @@ def generate_launch_description():
         output='screen',
     )
 
+    # Gazebo client
+    gzclient = ExecuteProcess(
+        cmd=['gzclient'],
+        output='screen',
+    )
+
     spawn_robot = Node(
         package='gazebo_ros',
         executable='spawn_entity.py',
-        arguments=['-entity', 'jackal', '-file', str(jackal_urdf_path),'-x', '0.0','-y', '0.0','-z', '0.0'], 
+        arguments=[
+            '-entity', 'jackal',
+            '-topic', 'robot_description',
+            '-x', '0.0', '-y', '0.0', '-z', '0.0',
+            '-R', '0.0', '-P', '0.0', '-Y', '0.0'
+        ],
         output='screen'
     )
 
@@ -54,12 +65,14 @@ def generate_launch_description():
         )),
         launch_arguments=[('is_sim', 'True')]
     )
+
+    
     
     ld = LaunchDescription(ARGUMENTS)
     ld.add_action(gz_resource_path)
     ld.add_action(gzserver)
+    ld.add_action(gzclient)
     ld.add_action(launch_jackal_description)
     ld.add_action(spawn_robot)
     ld.add_action(launch_jackal_control)
-    
     return ld

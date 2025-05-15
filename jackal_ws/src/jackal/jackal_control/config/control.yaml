@@ -1,6 +1,6 @@
 controller_manager:
   ros__parameters:
-    update_rate: 1000  # Hz
+    update_rate: 1000  # 높은 주기 유지 (꼭 1000Hz)
     use_sim_time: true
 
     joint_state_broadcaster:
@@ -8,15 +8,16 @@ controller_manager:
 
     jackal_velocity_controller:
       type: diff_drive_controller/DiffDriveController
+    
 
 jackal_velocity_controller:
   ros__parameters:
     left_wheel_names: [ "front_left_wheel_joint", "rear_left_wheel_joint" ]
     right_wheel_names: [ "front_right_wheel_joint", "rear_right_wheel_joint" ]
 
-    wheel_separation: 0.36 
-    wheels_per_side: 1  # actually 2, but both are controlled by 1 signal
-    wheel_radius: 0.098
+    wheel_separation: 0.37559   # Jackal 실제 물리 간격
+    wheels_per_side: 1
+    wheel_radius: 0.098      # Jackal 실제 바퀴 반지름
 
     wheel_separation_multiplier: 1.5
     left_wheel_radius_multiplier: 1.0
@@ -25,33 +26,27 @@ jackal_velocity_controller:
     publish_rate: 50.0
     odom_frame_id: odom
     base_frame_id: base_link
-    pose_covariance_diagonal : [0.001, 0.001, 1000000.0, 1000000.0, 1000000.0, 0.03]
+    pose_covariance_diagonal: [0.001, 0.001, 1000000.0, 1000000.0, 1000000.0, 0.03]
     twist_covariance_diagonal: [1000000.0, 1000000.0, 0.03, 1000000.0, 1000000.0, 0.03]
 
     odometry:
-      topic: odom           # ← 이걸로 퍼블리시됨
+      topic: odom
       frame_id: odom
       child_frame_id: base_link
 
     open_loop: false
     enable_odom_tf: false
-    
+
     cmd_vel_timeout: 0.25
     publish_limited_velocity: true
     use_stamped_vel: false
     velocity_rolling_window_size: 10
 
-    # Preserve turning radius when limiting speed/acceleration/jerk
     preserve_turning_radius: true
-
-    # Publish limited velocity
     publish_cmd: true
-
-    # Publish wheel data
     publish_wheel_data: true
 
     # Velocity and acceleration limits
-    # Whenever a min_* is unspecified, default to -max_*
     linear.x.has_velocity_limits: true
     linear.x.has_acceleration_limits: true
     linear.x.has_jerk_limits: false
@@ -59,8 +54,6 @@ jackal_velocity_controller:
     linear.x.min_velocity: -2.0
     linear.x.max_acceleration: 20.0
     linear.x.min_acceleration: -20.0
-    linear.x.max_jerk: 0.0
-    linear.x.min_jerk: 0.0
 
     angular.z.has_velocity_limits: true
     angular.z.has_acceleration_limits: true
@@ -69,5 +62,11 @@ jackal_velocity_controller:
     angular.z.min_velocity: -4.0
     angular.z.max_acceleration: 25.0
     angular.z.min_acceleration: -25.0
-    angular.z.max_jerk: 0.0
-    angular.z.min_jerk: 0.0
+
+joint_state_broadcaster:
+  ros__parameters:
+    joints:
+      - front_left_wheel_joint
+      - front_right_wheel_joint
+      - rear_left_wheel_joint
+      - rear_right_wheel_joint

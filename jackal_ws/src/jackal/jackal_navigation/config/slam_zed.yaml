@@ -35,7 +35,7 @@ depthimage_to_laserscan:
     scan_time: 0.033
     range_min: 0.3
     range_max: 10.0
-    scan_height: 10
+    scan_height: 1
     output_frame: zed_2i_left_lens_gazebo
     depth_topic: /zed/depth/image_raw
     camera_info_topic: /zed/depth/camera_info

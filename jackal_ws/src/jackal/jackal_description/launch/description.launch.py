@@ -35,6 +35,7 @@ def generate_robot_description(context):
         executable='robot_state_publisher',
         parameters=[{
             'robot_description': robot_description_xml,
+            'use_sim_time': True,
             'use_sim_time': True
         }],
         output='screen'
