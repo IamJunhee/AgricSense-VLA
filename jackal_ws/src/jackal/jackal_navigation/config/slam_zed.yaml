@@ -8,7 +8,7 @@ slam_toolbox:
     base_frame: base_link
 
     # ZED 카메라 기반 LaserScan
-    scan_topic: /zed/scan
+    scan_topic: /scan
     # 모드
     mode: mapping
 
