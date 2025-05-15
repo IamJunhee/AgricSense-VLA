@@ -26,6 +26,11 @@ def generate_launch_description():
         default_value='true',
         description='Use sim time if true')
     
+    map_yaml_dir = PathJoinSubstitution(
+            [pkg_jackal_navigation, 'maps', 'agricsense_field.yaml'])
+    
+    map_ply_dir = PathJoinSubstitution(
+            [pkg_jackal_navigation, 'maps', 'mid_presentation_rev.ply']),
     
 
     amcl_node = Node(
@@ -41,9 +46,11 @@ def generate_launch_description():
         package='nav2_map_server',
         executable='map_server',
         name='map_server',
-        namespace='',
         output='screen',
-        parameters=[params_file]
+        parameters=[{
+            'use_sim_time': True,
+            'yaml_filename': map_yaml_dir
+        }]
     )
     
     lifecycle_manager_localization_node=Node(
@@ -86,7 +93,15 @@ def generate_launch_description():
         ],
     )
 
-
+    publish_map_pointcloud=Node(
+        package='sensor_tools',
+        executable='pub_map_ply',
+        name='pub_map_ply',
+        output='screen',
+        parameters=[{'use_sim_time': True,
+                    'map_path': map_ply_dir}]
+    )
+    
     ld = LaunchDescription()
    
     ld.add_action(declare_params_file_cmd)
@@ -97,5 +112,5 @@ def generate_launch_description():
     ld.add_action(lifecycle_manager_localization_node)
     ld.add_action(nav2_bringup_cmd)
     ld.add_action(rviz_node)
-    
+    ld.add_action(publish_map_pointcloud)
     return ld
