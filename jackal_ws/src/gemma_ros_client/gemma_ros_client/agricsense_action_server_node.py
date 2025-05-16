@@ -387,7 +387,7 @@ class AgricsenseActionServer(Node):
             return math.sqrt(dx**2 + dy**2)
 
         sorted_list = sorted(self.farm_info, key=calculate_distance)
-        formatted_list = [f"({item[0]:.2f}, {item[1]:.2f}, {item[2]:.2f}: {item[3]})" for item in sorted_list]
+        formatted_list = [f"({item[0]:.2f}, {item[1]:.2f}, {item[2]:.2f}): {item[3]}" for item in sorted_list]
         
         return "\n".join(formatted_list)
 
