@@ -48,7 +48,7 @@ class AgricsenseActionServer(Node):
         self.current_timestamp: Optional[str] = None
 
         prompt_template_path = self.get_parameter('prompt_template_path').get_parameter_value().string_value
-        self.env = Environment(loader=FileSystemLoader(os.path.dirname(prompt_template_path)))
+        self.env = Environment(loader=FileSystemLoader(prompt_template_path))
         self.prompt_template = {
             "cognition": self.env.get_template("cognition_prompt_template.txt"),
             "reasoning": self.env.get_template("reasoning_prompt_template.txt"),
@@ -128,6 +128,7 @@ class AgricsenseActionServer(Node):
                 real_prompt = translated_prompt
         
         previous_action_list = []
+        rgb_image_list = []
 
         for i in range(loop_limit):
             self.get_logger().info(f"Starting loop iteration {i+1}/{loop_limit}")
@@ -214,19 +215,18 @@ class AgricsenseActionServer(Node):
 
                 action_result = await self.do_action(self.current_action)
                 
-                # TODO: 루프 데이터 수집 (이미지 + 프롬프트)
                 if control_by_human:
                     chat = make_chat(rgb_64, d_64, rendered_prompt, self.current_response)
                     self.save_chat(chat)
-                    
+
+                rgb_image_list.append(rgb_64)
 
                 if action_result.get("is_end", False):
                     self.get_logger().info(f"[Loop {i}] 'end' action or task completion. Terminating loop.")
+                    # TODO: 찍어온 사진 보고하기 rgb_image_list 활용
                     break
 
                 previous_action_list.append(action_result["result"])
-
-                
 
             except asyncio.CancelledError as ace:
                 self.get_logger().warn(f"[Loop {i}] Task cancelled (e.g. during Gemma call): {ace}")

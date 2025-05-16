@@ -1,0 +1,5 @@
+agricsense:
+  ros__parameters:
+    loop_limit: 60
+    use_translation: false
+    # data_path: "수집한 데이터 저장 path"
