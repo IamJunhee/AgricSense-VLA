@@ -5,8 +5,10 @@ from rclpy.executors import MultiThreadedExecutor
 
 from std_msgs.msg import Header
 from sensor_msgs.msg import Image
-from agricsense_action_interfaces.action import Agricsense # 실제 액션 정의로 대체
-from gemma_ros2_interface.srv import GenerateGemma # 실제 서비스 정의로 대체
+from geometry_msgs.msg import Pose
+from agricsense_action_interfaces.action import Agricsense
+from gemma_ros2_interface.srv import GenerateGemma
+from nav_msgs.msg import Odometry
 
 from .base64_util import image_to_base64
 from .json_validate import validate_custom_json
@@ -15,6 +17,8 @@ from .action_launcher import ActionLauncher
 
 import deepl
 import json
+import math
+import csv
 import os
 import threading
 import asyncio # 'await' 키워드 사용을 위해 필요
@@ -31,6 +35,10 @@ class AgricsenseActionServer(Node):
         self.declare_parameter('loop_limit', 20)
         self.declare_parameter('use_translation', False)
         self.declare_parameter('prompt_template_path', "/root/AgricSense-VLA/jackal_ws/src/gemma_ros_client/resource/prompt_ko/")
+        self.declare_parameter('csv_path', "/root/AgricSense-VLA/jackal_ws/src/gemma_ros_client/resource/farm_info/")
+        
+        self.csv_path_base = self.get_parameter('csv_path').get_parameter_value().string_value
+        self.farm_info = read_csv(self.csv_path_base)
 
         self.current_action: Optional[str] = None # JSON string 또는 dict가 될 수 있음
         self.active_goal_handle: Optional[rclpy.action.server.ServerGoalHandle] = None
@@ -56,8 +64,10 @@ class AgricsenseActionServer(Node):
 
         self.rgb_sub = self.create_subscription(Image, '/zed/image_raw', self.add_rbg_to_request, 10)
         self.depth_sub = self.create_subscription(Image, '/zed/depth/image_16uc1_mm', self.add_depth_to_request, 10)
+        self.current_pose_sub = self.create_subscription(Odometry, '/odometry/filtered/global', self.odom_callback, 10)
         self.gemma = self.create_client(GenerateGemma, 'generate_gemma')
         self.req = GenerateGemma.Request()
+        self.current_pose : Pose = None
 
         self.websocket = ROS2WebSocketServer("localhost", 9090)
         self.websocket.register_callbacks(on_message=self.user_annotation_callback)
@@ -127,7 +137,10 @@ class AgricsenseActionServer(Node):
                 return result
 
             data = {
-                "cognition": {"user_prompt": real_prompt, "farm_info": "없음", "current_location": "없음", 
+                "cognition": {"user_prompt": real_prompt,
+                              "farm_info": self.format_farm_info(),
+                              "current_location": "없음" if self.current_pose is None 
+                                    else "({:0.2f}, {:0.2f}, {:0.2f})".format(*pose_to_xy_angle(self.current_pose)), 
                               "previous_action_json": json.dumps(previous_action_list, indent=2, ensure_ascii=False)},
                 "reasoning": {},
                 "action": {"tools_list_json": json.dumps(self.tools_json, indent=2, ensure_ascii=False)}
@@ -252,6 +265,9 @@ class AgricsenseActionServer(Node):
     def add_depth_to_request(self, msg: Image):
         self.req.has_d_image = True; self.req.d_image = msg
 
+    def odom_callback(self, msg: Odometry):
+        self.current_pose = msg.pose.pose
+
     async def call_gemma(self, prompt: str, context: str = ""):
         if self.active_goal_handle and self.active_goal_handle.is_cancel_requested:
             raise asyncio.CancelledError("Gemma call cancelled by action goal state")
@@ -354,6 +370,18 @@ class AgricsenseActionServer(Node):
         self.current_action = action_from_user # self.current_action을 직접 설정 (JSON 문자열 또는 dict)
         self.on_message_event.set()
 
+    def format_farm_info(self):
+        def calculate_distance(item):
+            dx = self.current_pose.position.x - item[0]
+            dy = self.current_pose.position.y - item[1]
+
+            return math.sqrt(dx**2 + dy**2)
+
+        sorted_list = sorted(self.farm_info, key=calculate_distance)
+        formatted_list = [f"({item[0]:.2f}, {item[1]:.2f}, {item[2]:.2f}: {item[3]})" for item in sorted_list]
+        
+        return "\n".join(formatted_list)
+
     def translate_text_deepl(self, text_input: str, target_lang: str, api_key: Optional[str] = None) -> Optional[str]:
         actual_api_key = api_key or os.getenv("DEEPL_API_KEY")
         if not actual_api_key:
@@ -366,6 +394,42 @@ class AgricsenseActionServer(Node):
             self.get_logger().error(f'DeepL API Error: {de}'); return None
         except Exception as e:
             self.get_logger().error(f'Translate Failed with general error: {e}'); return None
+        
+def pose_to_xy_angle(pose):
+    qw = pose.orientation.w
+    qx = pose.orientation.x
+    qy = pose.orientation.y
+    qz = pose.orientation.z
+
+    standard_yaw_rad = math.atan2(2*(qw*qz + qx*qy), 1 - 2*(qy*qy + qz*qz))
+
+    angle = math.degrees(standard_yaw_rad)
+
+    return pose.position.x, pose.position.y, angle
+
+def read_csv(path):
+    result = [ ]
+    file_path = os.path.join(path, "farm_info.csv")
+
+    with open(file_path, newline='', encoding='utf-8') as f:
+        reader = csv.reader(f)
+        next(reader)
+
+        for row in reader:
+            r_x_str = row[0]
+            r_y_str = row[1]
+            r_angle_str = row[2]
+            r_extra = row[3] # 네 번째 필드가 없으면 IndexError 발생
+
+            x = float(r_x_str)
+            y = float(r_y_str)
+            angle = float(r_angle_str)
+
+            new_row = [x,y,angle, r_extra]
+            result.append(new_row)
+
+    return result
+
 
 def main(args=None):
     rclpy.init(args=args)

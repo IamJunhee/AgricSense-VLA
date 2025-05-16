@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from nav_msgs.msg import Odometry  # ✅ 변경된 메시지 타입
+from nav_msgs.msg import Odometry
 import tkinter as tk
 from tkinter import simpledialog
 import csv
@@ -13,6 +13,9 @@ class AnnotationUINode(Node):
     def __init__(self):
         super().__init__('annotation_ui_node')
 
+        self.declare_parameter('csv_path', "/root/AgricSense-VLA/jackal_ws/src/gemma_ros_client/resource/farm_info/")
+        self.csv_path_base = self.get_parameter('csv_path').get_parameter_value().string_value
+
         self.current_pose = None
         qos_profile = QoSProfile(
             history=HistoryPolicy.KEEP_LAST,
@@ -21,25 +24,22 @@ class AnnotationUINode(Node):
             durability=DurabilityPolicy.VOLATILE
         )
 
-        # ✅ Odometry 토픽
         self.subscription = self.create_subscription(
             Odometry,
-            '/odometry/global',
+            '/odometry/filtered/global',
             self.pose_callback,
             qos_profile
         )
 
-        self.csv_path = os.path.join(os.path.expanduser("~"), "annotations.csv")
+        self.csv_path = os.path.join(self.csv_path_base, "farm_info.csv")
         if not os.path.exists(self.csv_path):
-            with open(self.csv_path, 'w', newline='') as f:
+            with open(self.csv_path, 'w', newline='', encoding='utf-8') as f:
                 writer = csv.writer(f)
-                writer.writerow(['x', 'y', 'theta', 'label'])
+                writer.writerow(['x', 'y', 'angle', 'label'])
 
         self.get_logger().info("📝 Annotation UI Node 시작됨")
 
     def pose_callback(self, msg: Odometry):
-        if self.current_pose is None:
-            self.get_logger().info("📡 /odometry/global 수신")
         self.current_pose = msg.pose.pose
 
 
@@ -54,23 +54,24 @@ class AnnotationUINode(Node):
         q = self.current_pose.orientation
         siny_cosp = 2 * (q.w * q.z + q.x * q.y)
         cosy_cosp = 1 - 2 * (q.y * q.y + q.z * q.z)
-        theta = math.atan2(siny_cosp, cosy_cosp)
+        angle = math.degrees(math.atan2(siny_cosp, cosy_cosp))
 
-        with open(self.csv_path, 'a', newline='') as f:
+        with open(self.csv_path, 'a', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
-            writer.writerow([x, y, theta, label])
-            self.get_logger().info(f"📍 저장됨: x={x:.2f}, y={y:.2f}, θ={theta:.2f}, label={label}")
+            writer.writerow([x, y, angle, label])
+            self.get_logger().info(f"📍 저장됨: x={x:.2f}, y={y:.2f}, θ={angle:.2f}, label={label}")
 
 def launch_ui(node: AnnotationUINode):
     window = tk.Tk()
+    window.tk.eval('encoding system utf-8')
     window.title("라벨링 UI")
 
     def ask_and_save():
-        label = simpledialog.askstring("input", "description : ")
+        label = simpledialog.askstring("입력", "지역 설명 : ")
         if label:
             node.save_annotation(label)
 
-    tk.Button(window, text="point save", width=25, height=3, command=ask_and_save).pack(pady=20)
+    tk.Button(window, text="지역 정보 저장", width=25, height=3, command=ask_and_save).pack(pady=20)
 
     window.mainloop()
 

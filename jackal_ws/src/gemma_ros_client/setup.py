@@ -23,6 +23,7 @@ setup(
             'gemma_server = gemma_ros_client.gemma_service_server_node:main',
             'agricsense_server = gemma_ros_client.agricsense_action_server_node:main',
             'depth_converter_node = gemma_ros_client.depth_image_converter_node:main',
+            'annotation_ui_node = gemma_ros_client.annotation_ui_node:main',
         ],
     },
 )

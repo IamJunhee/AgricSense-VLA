@@ -5,8 +5,12 @@ Image 1은 현재 RGB 이미지
 Image 2는 깊이 이미지
 
 이전 행동 JSON: {{ previous_action_json }}
-농장정보: {{ farm_info }}
-현재 위치 : {{ current_location }}
+
+현재 위치 (x,y,angle): {{ current_location }}
+
+농장정보 (가까운 순서) (x,y,angle):
+{{ farm_info }}
+
 명령: {{ user_prompt }}
 
 다음을 중점적으로 파악할 것
