@@ -20,10 +20,11 @@ class ActionLauncher(BasicNavigator):
 
     async def launch_action(self, action_dict: dict):
         action = action_dict["action"]
-        await self.__action_table[action["name"]](**action["parameters"])
+        is_success = await self.__action_table[action["name"]](**action["parameters"])
 
-        # TODO: 결과 딕셔너리
-        return
+        action_dict["result"] = "Success" if is_success else "Failed"
+        
+        return action_dict
     
     async def _move(self, x, y, angle):
         goal = PoseStamped()
@@ -40,12 +41,10 @@ class ActionLauncher(BasicNavigator):
             pass
 
         if self.getResult() == TaskResult.SUCCEEDED:
-            # TODO: 도착 후?
-            return
+            return True
 
         else:
-            # TODO: 실패 후?
-            return
+            return False
                     
     async def _spin(self, angle):
         self.spin(angle / 180.0 * pi)
@@ -54,9 +53,7 @@ class ActionLauncher(BasicNavigator):
             pass
 
         if self.getResult() == TaskResult.SUCCEEDED:
-            # TODO: 도착 후?
-            return
+            return True
 
         else:
-            # TODO: 실패 후?
-            return
+            return False

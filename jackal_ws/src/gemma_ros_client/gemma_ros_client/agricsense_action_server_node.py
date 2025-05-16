@@ -32,7 +32,7 @@ class AgricsenseActionServer(Node):
         super().__init__('agricsense_action_server')
 
         self.declare_parameter('control_by_human', False)
-        self.declare_parameter('loop_limit', 20)
+        self.declare_parameter('loop_limit', 60)
         self.declare_parameter('use_translation', False)
         self.declare_parameter('prompt_template_path', "/root/AgricSense-VLA/jackal_ws/src/gemma_ros_client/resource/prompt_ko/")
         self.declare_parameter('csv_path', "/root/AgricSense-VLA/jackal_ws/src/gemma_ros_client/resource/farm_info/")
@@ -210,16 +210,14 @@ class AgricsenseActionServer(Node):
                     return result
 
                 action_result = await self.do_action(self.current_action)
-                
-                try:
-                    action_obj = json.loads(self.current_action) if isinstance(self.current_action, str) else self.current_action
-                    previous_action_list.append(action_obj)
-                except json.JSONDecodeError:
-                    previous_action_list.append(self.current_action) # 파싱 실패 시 문자열로 저장
 
                 if action_result.get("is_end", False):
                     self.get_logger().info(f"[Loop {i}] 'end' action or task completion. Terminating loop.")
                     break
+
+                previous_action_list.append(action_result["result"])
+
+                
 
             except asyncio.CancelledError as ace:
                 self.get_logger().warn(f"[Loop {i}] Task cancelled (e.g. during Gemma call): {ace}")
