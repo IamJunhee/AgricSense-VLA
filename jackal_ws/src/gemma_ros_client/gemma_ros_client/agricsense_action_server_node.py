@@ -36,11 +36,14 @@ class AgricsenseActionServer(Node):
         self.declare_parameter('use_translation', False)
         self.declare_parameter('prompt_template_path', "/root/AgricSense-VLA/jackal_ws/src/gemma_ros_client/resource/prompt_ko/")
         self.declare_parameter('csv_path', "/root/AgricSense-VLA/jackal_ws/src/gemma_ros_client/resource/farm_info/")
+        self.declare_parameter('data_path', os.path.join(os.path.expanduser("~"), "AgricSense-VLA/human_dataset"))
         
+        self.data_path_base = self.get_parameter('data_path').get_parameter_value().string_value
         self.csv_path_base = self.get_parameter('csv_path').get_parameter_value().string_value
         self.farm_info = read_csv(self.csv_path_base)
 
         self.current_action: Optional[str] = None # JSON string 또는 dict가 될 수 있음
+        self.current_response: Optional[dict] = None
         self.active_goal_handle: Optional[rclpy.action.server.ServerGoalHandle] = None
         self.current_timestamp: Optional[str] = None
 
@@ -148,7 +151,7 @@ class AgricsenseActionServer(Node):
             rendered_prompt = {key: value.render(data[key]) for key, value in self.prompt_template.items()}
             
             try:
-                self.current_timestamp = self.scene_data_to_websocket(rendered_prompt)
+                self.current_timestamp, rgb_64, d_64 = self.scene_data_to_websocket(rendered_prompt)
             except Exception as e:
                 self.get_logger().error(f"[Loop {i}] Failed to send scene data: {e}")
                 goal_handle.abort(); result.success = False; self.active_goal_handle = None
@@ -210,6 +213,12 @@ class AgricsenseActionServer(Node):
                     return result
 
                 action_result = await self.do_action(self.current_action)
+                
+                # TODO: 루프 데이터 수집 (이미지 + 프롬프트)
+                if control_by_human:
+                    chat = make_chat(rgb_64, d_64, rendered_prompt, self.current_response)
+                    self.save_chat(chat)
+                    
 
                 if action_result.get("is_end", False):
                     self.get_logger().info(f"[Loop {i}] 'end' action or task completion. Terminating loop.")
@@ -310,7 +319,7 @@ class AgricsenseActionServer(Node):
         
         return { "is_end": False, "result": action_result }
 
-    def scene_data_to_websocket(self, prompt_dict: Dict[str, str]) -> str:
+    def scene_data_to_websocket(self, prompt_dict: Dict[str, str]):
         rgb_image_data, rgb_width, rgb_height = "", 0, 0
         d_image_data, d_width, d_height, d_encoding = "", 0, 0, ""
         current_time_iso = datetime.now(timezone.utc).isoformat(timespec='milliseconds').replace('+00:00', 'Z')
@@ -342,7 +351,7 @@ class AgricsenseActionServer(Node):
             }
         }
         self.websocket.broadcast_message("sceneData", scene_data)
-        return timestamp
+        return timestamp, rgb_image_data, d_image_data
 
     def agent_response_to_websocket(self, response_dict: Dict[str, str], timestamp: str):
         self.websocket.broadcast_message("agentResponse", {
@@ -359,6 +368,8 @@ class AgricsenseActionServer(Node):
             return
         
         responses = payload.get("responses")
+        self.current_response = responses
+        
         action_from_user = responses.get("action") if responses else None
         if not action_from_user:
             self.get_logger().error("Action missing in userAnnotation payload responses.")
@@ -392,6 +403,21 @@ class AgricsenseActionServer(Node):
             self.get_logger().error(f'DeepL API Error: {de}'); return None
         except Exception as e:
             self.get_logger().error(f'Translate Failed with general error: {e}'); return None
+        
+    def save_chat(self, chat: dict):
+        os.makedirs(self.data_path_base, exist_ok=True)
+
+        user_identifier = os.environ.get('USER', 'unknown_user')
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        file_name = f"chat_{user_identifier}_{timestamp}.json"
+
+        full_file_path = os.path.join(self.data_path_base, file_name)
+
+        with open(full_file_path, 'w', encoding='utf-8') as f:
+            json.dump(chat, f, ensure_ascii=False, indent=4)
+
+        self.get_logger().info(f"Info: Chat data successfully saved to {full_file_path}")
         
 def pose_to_xy_angle(pose):
     qw = pose.orientation.w
@@ -427,6 +453,50 @@ def read_csv(path):
             result.append(new_row)
 
     return result
+
+def make_chat(rgb_64, d_64, prompt_dict, response_dict) -> dict:
+    messages = [
+        {
+            "role": "user",
+            "content": [
+                {"type": "image", "base64": rgb_64},
+                {"type": "image", "base64": d_64},
+                {"type": "text", "text": prompt_dict["cognition"]}
+            ] 
+        },
+        {
+            "role": "assistant",
+            "content": [
+                {"type": "text", "text": response_dict["cognition"]}
+            ]
+        },
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": prompt_dict["reasoning"]}
+            ] 
+        },
+        {
+            "role": "assistant",
+            "content": [
+                {"type": "text", "text": response_dict["reasoning"]}
+            ]
+        },
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": prompt_dict["action"]}
+            ] 
+        },
+        {
+            "role": "assistant",
+            "content": [
+                {"type": "text", "text": response_dict["action"]}
+            ]
+        }
+    ]
+
+    return dict(messages = messages)
 
 
 def main(args=None):
