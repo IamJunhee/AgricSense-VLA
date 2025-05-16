@@ -6,3 +6,4 @@ install/
 log/
 venv/
 pyvenv.cfg
+human_dataset/
