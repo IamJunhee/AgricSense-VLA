@@ -10,7 +10,7 @@ class ActionLauncher(BasicNavigator):
 
         self.__action_table = {
             "move": self._move,
-            "spin": self._spin,
+            "spin": self._spin_using_pose,
             "forward": self._forward,
         }
 
@@ -32,10 +32,10 @@ class ActionLauncher(BasicNavigator):
         goal = PoseStamped()
         goal.header.frame_id = 'map'
         goal.header.stamp = self.get_clock().now().to_msg()
-        goal.pose.position.x = x
-        goal.pose.position.y = y
-        goal.pose.orientation.w = cos(angle/360*pi)
-        goal.pose.orientation.z = sin(angle/360*pi)
+        goal.pose.position.x = float(x)
+        goal.pose.position.y = float(y)
+        goal.pose.orientation.w = cos(float(angle)/360*pi)
+        goal.pose.orientation.z = sin(float(angle)/360*pi)
 
         self.goToPose(goal)
 
@@ -49,8 +49,30 @@ class ActionLauncher(BasicNavigator):
             return False
                     
     async def _spin(self, angle):
-        self.spin(angle / 180.0 * pi)
+        self.spin(float(angle) / 180.0 * pi)
         
+        while not self.isTaskComplete():
+            pass
+
+        if self.getResult() == TaskResult.SUCCEEDED:
+            return True
+
+        else:
+            return False
+        
+    async def _spin_using_pose(self, angle):
+        goal = PoseStamped()
+        goal.header.frame_id = 'map'
+        goal.header.stamp = self.get_clock().now().to_msg()
+        goal.pose.position = self.current_pose.position
+
+        _, _, curr_angle = pose_to_xy_angle(self.current_pose)
+
+        goal.pose.orientation.w = cos(float(curr_angle + angle)/360*pi)
+        goal.pose.orientation.z = sin(float(curr_angle + angle)/360*pi)
+
+        self.goToPose(goal)
+
         while not self.isTaskComplete():
             pass
 
@@ -68,8 +90,8 @@ class ActionLauncher(BasicNavigator):
 
         curr_x, curr_y, curr_angle = pose_to_xy_angle(self.current_pose)
 
-        goal.pose.position.x = curr_x + distance * cos(curr_angle / 180 * pi)
-        goal.pose.position.y = curr_y + distance * sin(curr_angle / 180 * pi)
+        goal.pose.position.x = curr_x + float(distance) * cos(curr_angle / 180 * pi)
+        goal.pose.position.y = curr_y + float(distance) * sin(curr_angle / 180 * pi)
         goal.pose.orientation.w = cos(curr_angle/360*pi)
         goal.pose.orientation.z = sin(curr_angle/360*pi)
 
