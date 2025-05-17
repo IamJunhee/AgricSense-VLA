@@ -7,7 +7,7 @@
       "properties": {
         "angle": {
           "type": "float",
-          "description": "회전 각도 단위는 도(degree)이며, 음수(-)는 왼쪽, 양수(+)는 오른쪽임"
+          "description": "회전 각도 단위는 도(degree)이며, 음수(-)는 오른쪽, 양수(+)는 왼쪽임"
         }
       },
       "required": [
