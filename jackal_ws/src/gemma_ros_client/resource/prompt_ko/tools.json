@@ -42,6 +42,22 @@
     }
   },
   {
+    "name": "forward",
+    "description": "로봇을 현재 위치에서 입력한 거리만큼 앞으로 이동합니다.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "distance": {
+          "type": "float",
+          "description": "앞으로 이동할 거리. 단위는 미터(m)"
+        }
+      },
+      "required": [
+        "distance"
+      ]
+    }
+  },
+  {
     "name": "end",
     "description": "사용자의 명령 수행 완료 / 더 이상 할 수 있는 것이 없는 경우 등 임무 종료 조건 충족 시 사용.",
     "parameters": {

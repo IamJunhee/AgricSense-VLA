@@ -14,6 +14,7 @@ from .base64_util import image_to_base64
 from .json_validate import validate_custom_json
 from .websocket_util import ROS2WebSocketServer
 from .action_launcher import ActionLauncher
+from. pose_util import pose_to_xy_angle
 
 import deepl
 import json
@@ -280,6 +281,7 @@ class AgricsenseActionServer(Node):
             raise asyncio.CancelledError("Gemma call cancelled by action goal state")
 
         self.req.prompt = prompt
+        self.req.max_new_tokens = 2000
         if context: self.req.context_json = context
         self.get_logger().info(f'Requesting Gemma service with prompt: {self.req.prompt[:100]}...')
         res = await self.gemma.call_async(self.req)
@@ -418,18 +420,6 @@ class AgricsenseActionServer(Node):
             json.dump(chat, f, ensure_ascii=False, indent=4)
 
         self.get_logger().info(f"Info: Chat data successfully saved to {full_file_path}")
-        
-def pose_to_xy_angle(pose):
-    qw = pose.orientation.w
-    qx = pose.orientation.x
-    qy = pose.orientation.y
-    qz = pose.orientation.z
-
-    standard_yaw_rad = math.atan2(2*(qw*qz + qx*qy), 1 - 2*(qy*qy + qz*qz))
-
-    angle = math.degrees(standard_yaw_rad)
-
-    return pose.position.x, pose.position.y, angle
 
 def read_csv(path):
     result = [ ]
