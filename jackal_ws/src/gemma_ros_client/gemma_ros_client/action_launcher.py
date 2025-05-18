@@ -10,7 +10,7 @@ class ActionLauncher(BasicNavigator):
 
         self.__action_table = {
             "move": self._move,
-            "spin": self._spin_using_pose,
+            "spin": self._spin,
             "forward": self._forward,
         }
 
