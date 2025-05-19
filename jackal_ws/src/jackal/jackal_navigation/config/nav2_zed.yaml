@@ -447,7 +447,7 @@ local_costmap:
       always_send_full_costmap: true
       footprint: '[[0.25, 0.20], [0.25, -0.20], [-0.25, -0.20], [-0.25, 0.20]]'
       footprint_padding: 0.1
-      global_frame: map
+      global_frame: odom
       robot_base_frame: base_link
       rolling_window: true
       width: 3
