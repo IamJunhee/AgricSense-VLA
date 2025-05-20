@@ -462,6 +462,7 @@ local_costmap:
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: true
+        clearing: true
         observation_sources: lidar_scan
 
         # zed_points:
@@ -755,7 +756,7 @@ velocity_smoother:
     - 0.0
     - -3.2
     max_velocity:
-    - 0.6
+    - 0.4
     - 0.0
     - 1.0
     min_velocity:
@@ -764,41 +765,6 @@ velocity_smoother:
     - -1.0
     odom_duration: 0.1
     odom_topic: /odometry/global
-    scale_velocities: false
-    smoothing_frequency: 20.0
-    use_sim_time: true
-    velocity_timeout: 1.0
-
-
-behavior_server:
-  ros__parameters:
-    use_sim_time: true
-
-velocity_smoother:
-  ros__parameters:
-    deadband_velocity:
-    - 0.0
-    - 0.0
-    - 0.0
-    feedback: OPEN_LOOP
-    max_accel:
-    - 2.5
-    - 0.0
-    - 3.2
-    max_decel:
-    - -2.5
-    - 0.0
-    - -3.2
-    max_velocity:
-    - 0.26
-    - 0.0
-    - 1.0
-    min_velocity:
-    - -0.26
-    - 0.0
-    - -1.0
-    odom_duration: 0.1
-    odom_topic: odom
     scale_velocities: false
     smoothing_frequency: 20.0
     use_sim_time: true
